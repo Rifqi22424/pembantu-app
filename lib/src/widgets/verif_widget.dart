@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 
 class VerifCodeInput extends StatefulWidget {
@@ -13,6 +15,36 @@ class _VerifCodeInputState extends State<VerifCodeInput> {
   List<FocusNode> focusNodes = [];
   List<TextEditingController> controllers = [];
   int numberOfFields = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        numberOfFields,
+        (index) {
+          return Container(
+            width: 50,
+            height: 50,
+            margin: EdgeInsets.symmetric(horizontal: 8),
+            child: TextFormField(
+              controller: controllers[index],
+              focusNode: focusNodes[index],
+              keyboardType: TextInputType.number,
+              maxLength: 1,
+              onChanged: (value) => _onFieldChanged(value, index),
+              decoration: InputDecoration(
+                counterText: '',
+                contentPadding: EdgeInsets.only(left: 18),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -50,35 +82,5 @@ class _VerifCodeInputState extends State<VerifCodeInput> {
     if (allFieldsFilled) {
       widget.onVerificationSuccess();
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
-        numberOfFields,
-        (index) {
-          return Container(
-            width: 50,
-            height: 50,
-            margin: EdgeInsets.symmetric(horizontal: 8),
-            child: TextFormField(
-              controller: controllers[index],
-              focusNode: focusNodes[index],
-              keyboardType: TextInputType.number,
-              maxLength: 1,
-              onChanged: (value) => _onFieldChanged(value, index),
-              decoration: InputDecoration(
-                counterText: '',
-                contentPadding: EdgeInsets.only(left: 18),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 }
