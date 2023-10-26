@@ -30,9 +30,7 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
   @override
   void initState() {
     super.initState();
-    authToken = '1|F66Hl9KKOXXVDZeF7vHBNh8Xy67ooDlPLe92Gzgpa8caab24';
-    id = '1';
-    pekerjaRegist = RegistPekerjaModel(authToken: authToken, id: id);
+    pekerjaRegist = RegistPekerjaModel();
   }
 
   @override
@@ -41,51 +39,55 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
-      body: Center(
-        child: Container(
-          width: deviceTypeTablet() ? 340 : screenWidth,
-          height: screenHeight,
-          padding: EdgeInsets.symmetric(horizontal: 25),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: screenHeight * 0.06),
-              navback(context),
-              TopText(),
-              checklist(),
-              ScrollConfiguration(
-                behavior: NoGlowBehavior(),
-                child: Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(top: 30),
-                    child: Form(
-                      key: formKey,
-                      child: Column(
-                        children: [
-                          ListView(
-                            shrinkWrap: true,
+      body: ScrollConfiguration(
+        behavior: NoGlowBehavior(),
+        child: SingleChildScrollView(
+          child: Center(
+            child: Container(
+              width: deviceTypeTablet() ? 340 : screenWidth,
+              height: screenHeight,
+              padding: EdgeInsets.symmetric(horizontal: 25),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: screenHeight * 0.06),
+                  navback(context),
+                  TopText(),
+                  checklist(),
+                  ScrollConfiguration(
+                    behavior: NoGlowBehavior(),
+                    child: Expanded(
+                      child: Container(
+                        margin: EdgeInsets.only(top: 30),
+                        child: Form(
+                          key: formKey,
+                          child: Column(
                             children: [
-                              _NamaLengkap(),
-                              SizedBox(height: 12),
-                              _AlamatKTP(),
-                              SizedBox(height: 12),
-                              _NoTelp(),
-                              SizedBox(height: 12),
-                              _Alamat(),
+                              ListView(
+                                shrinkWrap: true,
+                                children: [
+                                  _NamaLengkap(),
+                                  SizedBox(height: 12),
+                                  _AlamatKTP(),
+                                  SizedBox(height: 12),
+                                  _NoTelp(),
+                                  SizedBox(height: 12),
+                                  _Alamat(),
+                                ],
+                              ),
+                              Spacer(),
+                              submitButton(),
                             ],
                           ),
-                          Spacer(),
-                          submitButton(),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              )
-            ],
+                  )
+                ],
+              ),
+            ),
           ),
         ),
       ),

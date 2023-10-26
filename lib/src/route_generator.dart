@@ -1,9 +1,9 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:prt/src/api/fetch_user_data.dart';
 import 'package:prt/src/models/chat_model.dart';
 import 'package:prt/src/models/chat_user_model.dart';
-import 'package:prt/src/models/user_model.dart';
 import 'package:prt/src/pekerja_screens/cek_interview/pandding_page.dart';
 import 'package:prt/src/pekerja_screens/cek_interview/pass_page.dart';
 import 'package:prt/src/pekerja_screens/cek_interview/reject_page.dart';
@@ -77,14 +77,15 @@ class RouteGenerator {
       case '/home':
         return MaterialPageRoute(builder: (context) => HomePage());
       case '/detailprofile':
-        final User user = settings.arguments as User;
+        final UserProfile user = settings.arguments as UserProfile;
         return MaterialPageRoute(
           builder: (context) => DetailProfilePage(user: user),
         );
       case '/notif':
         return MaterialPageRoute(builder: (context) => NotifPage());
       case '/likedusers':
-        final List<User> userList = settings.arguments as List<User>;
+        final List<UserProfile> userList =
+            settings.arguments as List<UserProfile>;
         return MaterialPageRoute(
           builder: (context) => LikedUsersPage(userList: userList),
         );
@@ -119,7 +120,16 @@ class RouteGenerator {
           builder: (context) => ChatPage(user: user),
         );
       case '/videocall':
-        return MaterialPageRoute(builder: (context) => VideoCall());
+        final args = settings.arguments as Map<String, dynamic>;
+        final String channel = args['channel'];
+        final String token = args['token'];
+
+        return MaterialPageRoute(
+          builder: (context) => VideoCall(
+            channel: channel,
+            token: token,
+          ),
+        );
       case '/profile':
         return MaterialPageRoute(builder: (context) => ProfilePage());
       case '/editprofile':

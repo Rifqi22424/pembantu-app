@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prt/src/models/user_model.dart';
+import 'package:prt/main.dart';
+import 'package:prt/src/api/fetch_user_data.dart';
 import 'package:prt/src/provider/user_provider.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/limit_text.dart';
@@ -547,41 +548,61 @@ class SearchPageState extends State<SearchPage> {
     );
   }
 
-  void _toggleUserLikedStatus(User user) {
+  void _toggleUserLikedStatus(UserProfile user) {
     final newIsLiked = !user.isLiked;
     final userProvider = UserProvider(); // Create an instance
     userProvider.updateUserLikedStatus(
-        user.id, newIsLiked); // Call the method on the instance
+        user.profile["id"], newIsLiked); // Call the method on the instance
   }
 
   buildUserList() {
-    return Consumer<UserProvider>(
-      builder: (context, userProvider, child) {
-        final filteredUsers = selectedCategory != null
-            ? userProvider.users
-                .where((user) =>
-                    user.type == selectedCategory &&
-                    user.name.toLowerCase().contains(searchText.toLowerCase()))
-                .toList()
-            : userProvider.users
-                .where((user) =>
-                    user.name.toLowerCase().contains(searchText.toLowerCase()))
-                .toList();
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.only(top: 8),
-          itemCount: filteredUsers.length,
-          itemBuilder: (context, index) {
-            final user = filteredUsers[index];
-            return buildUserListItem(user);
-          },
-        );
+    return FutureBuilder<List<UserProfile>>(
+      future: fetchUserProfiles(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          final usersFromAPI = snapshot.data;
+          if (usersFromAPI == null || usersFromAPI.isEmpty) {
+            return Text('Tidak ada data.');
+          }
+
+            List<UserProfile> filteredUsers = [];
+
+          if (selectedCategory == null) {
+            filteredUsers = usersFromAPI;
+          } else {
+            filteredUsers = usersFromAPI.where((user) {
+              return user.category["name"] == selectedCategory;
+            }).toList();
+          }
+
+          if (filteredUsers.isEmpty) {
+            return Text("Tidak ada data");
+          }
+
+
+          return SizedBox(
+            width: 400,
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: BouncingScrollPhysics(),
+              padding: EdgeInsets.only(top: 6),
+              itemCount: filteredUsers.length,
+              itemBuilder: (context, index) {
+                final user = usersFromAPI[index];
+                return buildUserListItem(user);
+              },
+            ),
+          );
+        }
       },
     );
   }
 
-  buildUserListItem(User user) {
+  buildUserListItem(UserProfile user) {
     final Color loveColor = user.isLiked ? Color(0xFFFF0E0E) : Colors.white;
     return Column(
       children: [
@@ -629,11 +650,11 @@ class SearchPageState extends State<SearchPage> {
     );
   }
 
-  userPrices(User user) {
+  userPrices(UserProfile user) {
     return Padding(
       padding: const EdgeInsets.only(top: 2.0),
       child: Text(
-        'Rp. ${user.price}',
+        'Rp. ${user.profile["gaji"]}',
         style: TextStyle(
           color: Color(0xFF080C11),
           fontSize: 11,
@@ -644,11 +665,11 @@ class SearchPageState extends State<SearchPage> {
     );
   }
 
-  SizedBox userDescriptions(User user) {
+  SizedBox userDescriptions(UserProfile user) {
     return SizedBox(
       width: 150,
       child: Text(
-        limitText(user.description, 60),
+        limitText(user.profile["deskripsi"], 60),
         style: TextStyle(
           color: Color(0xFF828993),
           fontSize: 8,
@@ -659,32 +680,30 @@ class SearchPageState extends State<SearchPage> {
     );
   }
 
-  Container userRatings(User user) {
+  Container userRatings(UserProfile user) {
     return Container(
       width: 110,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            child: Row(
-              children: [
-                Image.asset(
-                  'images/Star.png',
-                  width: 11,
-                  height: 11,
+          Row(
+            children: [
+              Image.asset(
+                'images/Star.png',
+                width: 11,
+                height: 11,
+              ),
+              SizedBox(width: 2),
+              Text(
+                '${user.profile["rating"]}',
+                style: TextStyle(
+                  color: Color(0xFF080C11),
+                  fontSize: 8,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
                 ),
-                SizedBox(width: 2),
-                Text(
-                  '${user.star}',
-                  style: TextStyle(
-                    color: Color(0xFF080C11),
-                    fontSize: 8,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                  ),
-                )
-              ],
-            ),
+              )
+            ],
           ),
           Container(
             child: Row(
@@ -695,7 +714,7 @@ class SearchPageState extends State<SearchPage> {
                   height: 14,
                 ),
                 Text(
-                  '${user.age}',
+                  user.profile["usia"],
                   style: TextStyle(
                     color: Color(0xFF080C11),
                     fontSize: 8,
@@ -706,37 +725,35 @@ class SearchPageState extends State<SearchPage> {
               ],
             ),
           ),
-          Container(
-            child: Row(
-              children: [
-                Image.asset(
-                  'images/TimeIcon.png',
-                  width: 9,
-                  height: 9,
+          Row(
+            children: [
+              Image.asset(
+                'images/TimeIcon.png',
+                width: 9,
+                height: 9,
+              ),
+              SizedBox(
+                width: 2,
+              ),
+              Text(
+                '${user.profile["lama_pengalaman_bekerja"]}',
+                style: TextStyle(
+                  color: Color(0xFF080C11),
+                  fontSize: 8,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
                 ),
-                SizedBox(
-                  width: 2,
-                ),
-                Text(
-                  '${user.experience}',
-                  style: TextStyle(
-                    color: Color(0xFF080C11),
-                    fontSize: 8,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                  ),
-                )
-              ],
-            ),
+              )
+            ],
           ),
         ],
       ),
     );
   }
 
-  Text userNames(User user) {
+  Text userNames(UserProfile user) {
     return Text(
-      '${user.name}',
+      user.profile["nama_lengkap"],
       style: TextStyle(
         color: Color(0xFF080C11),
         fontSize: 14,
@@ -746,7 +763,7 @@ class SearchPageState extends State<SearchPage> {
     );
   }
 
-  Container userTypes(User user) {
+  Container userTypes(UserProfile user) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: ShapeDecoration(
@@ -756,7 +773,7 @@ class SearchPageState extends State<SearchPage> {
       child: Stack(
         children: [
           Text(
-            '${user.type}',
+            user.category["name"],
             style: TextStyle(
               color: Colors.white,
               fontSize: 8,
@@ -770,14 +787,15 @@ class SearchPageState extends State<SearchPage> {
     );
   }
 
-  Container listImages(User user, Color loveColor) {
+  Container listImages(UserProfile user, Color loveColor) {
     return Container(
       width: 150,
       height: 150,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         image: DecorationImage(
-          image: AssetImage(user.imageUrl),
+          image: NetworkImage(
+                          "$serverPath${user.profile["foto_setengah_badan"]}"),
           fit: BoxFit.cover,
         ),
       ),

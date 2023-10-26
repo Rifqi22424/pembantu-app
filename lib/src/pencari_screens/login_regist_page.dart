@@ -75,15 +75,6 @@ class LoginRegistPage extends StatelessWidget {
       onPressed: () {
         Navigator.pushNamed(context, '/regist');
       },
-      child: Text(
-        'Sign Up',
-        style: TextStyle(
-          color: Color(0xFF828993),
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
       style: ButtonStyle(
           shape: MaterialStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
@@ -93,6 +84,15 @@ class LoginRegistPage extends StatelessWidget {
           backgroundColor: MaterialStateProperty.all<Color>(Color(0xFFF5F5F5)),
           minimumSize:
               MaterialStateProperty.all<Size>(Size(double.maxFinite, 44))),
+      child: Text(
+        'Sign Up',
+        style: TextStyle(
+          color: Color(0xFF828993),
+          fontSize: 12,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     ));
   }
 
@@ -102,15 +102,6 @@ class LoginRegistPage extends StatelessWidget {
       onPressed: () {
         Navigator.pushNamed(context, '/login');
       },
-      child: Text(
-        'Login',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
       style: ButtonStyle(
           shape: MaterialStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
@@ -120,6 +111,15 @@ class LoginRegistPage extends StatelessWidget {
           backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
               MaterialStateProperty.all<Size>(Size(double.maxFinite, 44))),
+      child: Text(
+        'Login',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     ));
   }
 

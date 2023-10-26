@@ -37,9 +37,8 @@ class _RegistPekerjaKeteranganState extends State<RegistPekerjaKeterangan> {
   @override
   void initState() {
     super.initState();
-    authToken = '1|F66Hl9KKOXXVDZeF7vHBNh8Xy67ooDlPLe92Gzgpa8caab24';
-    id = '1';
-    pekerjaRegist = RegistPekerjaModel(authToken: authToken, id: id);
+    authToken = '1|wLQRRxEnI5e4U6LMb6dUn49LJovzoUwKy8rUq9lh66972726';
+    pekerjaRegist = RegistPekerjaModel();
   }
 
   @override
@@ -48,60 +47,64 @@ class _RegistPekerjaKeteranganState extends State<RegistPekerjaKeterangan> {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
-      body: Center(
-        child: Container(
-          width: deviceTypeTablet() ? 340 : screenWidth,
-          padding: EdgeInsets.symmetric(horizontal: 25),
-          height: screenHeight,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: screenHeight * 0.06),
-              navback(context),
-              TopText(),
-              checklist(),
-              ScrollConfiguration(
-                behavior: NoGlowBehavior(),
-                child: Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(top: 30),
-                    child: Form(
-                      key: formKey,
-                      child: Column(
-                        children: [
-                          ListView(
-                            shrinkWrap: true,
+      body: ScrollConfiguration(
+        behavior: NoGlowBehavior(),
+        child: SingleChildScrollView(
+          child: Center(
+            child: Container(
+              width: deviceTypeTablet() ? 340 : screenWidth,
+              padding: EdgeInsets.symmetric(horizontal: 25),
+              height: screenHeight,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: screenHeight * 0.06),
+                  navback(context),
+                  TopText(),
+                  checklist(),
+                  ScrollConfiguration(
+                    behavior: NoGlowBehavior(),
+                    child: Expanded(
+                      child: Container(
+                        margin: EdgeInsets.only(top: 30),
+                        child: Form(
+                          key: formKey,
+                          child: Column(
                             children: [
-                              _NoKTP(),
-                              SizedBox(height: 12),
-                              _NoTelp(),
-                              SizedBox(height: 12),
-                              Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    _TinggiBadan(),
-                                    SizedBox(height: 10),
-                                    _BeratBadan(),
-                                  ]),
-                              SizedBox(height: 12),
-                              _Usia(),
-                              SizedBox(height: 12),
-                              _Status(),
+                              ListView(
+                                shrinkWrap: true,
+                                children: [
+                                  _NoKTP(),
+                                  SizedBox(height: 12),
+                                  _NoTelp(),
+                                  SizedBox(height: 12),
+                                  Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        _TinggiBadan(),
+                                        SizedBox(height: 10),
+                                        _BeratBadan(),
+                                      ]),
+                                  SizedBox(height: 12),
+                                  _Usia(),
+                                  SizedBox(height: 12),
+                                  _Status(),
+                                ],
+                              ),
+                              Spacer(),
+                              submitButton(),
                             ],
                           ),
-                          Spacer(),
-                          submitButton(),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              )
-            ],
+                  )
+                ],
+              ),
+            ),
           ),
         ),
       ),

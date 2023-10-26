@@ -2,7 +2,8 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:prt/src/models/auth_model.dart';
+import 'package:prt/src/api/auth_model.dart';
+import 'package:prt/src/database/shared_preferences.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
 class RegistPage extends StatefulWidget {
@@ -23,9 +24,10 @@ class _RegistPageState extends State<RegistPage> {
   final formKey = GlobalKey<FormState>();
   bool isPasswordVisible = false;
 
-  String username = '';
+  String gmail = '';
   String nomorhp = '';
   String password = '';
+  String confirmPassword = '';
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +54,7 @@ class _RegistPageState extends State<RegistPage> {
                   key: formKey,
                   child: Column(
                     children: [
-                      UsernameField(),
+                      gmailField(),
                       SizedBox(height: 12),
                       NoHpField(),
                       SizedBox(height: 12),
@@ -259,7 +261,7 @@ class _RegistPageState extends State<RegistPage> {
     );
   }
 
-  Widget UsernameField() {
+  Widget gmailField() {
     return Container(
       width: double.maxFinite,
       height: 54,
@@ -270,7 +272,7 @@ class _RegistPageState extends State<RegistPage> {
       child: TextFormField(
         controller: emailController,
         decoration: InputDecoration(
-          hintText: 'Username',
+          hintText: 'Masukan email',
           border: InputBorder.none,
           contentPadding:
               EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -290,7 +292,7 @@ class _RegistPageState extends State<RegistPage> {
           height: 1.71,
         ),
         onSaved: (String? value) {
-          username = value!;
+          gmail = value!;
         },
       ),
     );
@@ -423,7 +425,7 @@ class _RegistPageState extends State<RegistPage> {
             )),
         // validator: validatePassword,
         onSaved: (String? value) {
-          password = value!;
+          confirmPassword = value!;
         },
       ),
     );
@@ -441,32 +443,25 @@ class _RegistPageState extends State<RegistPage> {
         minimumSize:
             MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
       ),
-      onPressed:
-
-          // () async {
-          //   try {
-          //     bool registered = await authService.register(
-          //       emailController.text,
-          //       phoneController.text,
-          //       passwordController.text,
-          //       passwordConfirmController.text,
-          //     );
-          //     if (registered) {
-          //       formKey.currentState!.save();
-          //       print('post $username, $nomorhp and $password');
-          //       Navigator.pushNamed(context, '/verif');
-          //     } else {
-          //       print('Something wrong');
-          //     }
-          //   } catch (e) {
-          //     print('error $e');
-          //   }
-          // },
-
-          () {
-        formKey.currentState!.save();
-        print('post $username, $nomorhp and $password');
-        Navigator.pushNamed(context, '/verif');
+      onPressed: () async {
+        if (formKey.currentState!.validate()) {
+          formKey.currentState!.save();
+          try {
+            int id = await authService.register(
+              gmail,
+              nomorhp,
+              password,
+              confirmPassword,
+            );
+            
+            if (id != -1) {
+              await saveIdToSharedPreferences(id);
+              Navigator.pushNamed(context, '/verif');
+            }
+          } catch (e) {
+            print('Error: $e');
+          }
+        }
       },
       child: Text('Sign Up'),
     );

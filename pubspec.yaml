@@ -47,6 +47,10 @@ dependencies:
   http: ^1.1.0
   dio: ^5.3.2
   http_parser: ^4.0.2
+  sqflite: ^2.3.0
+  shared_preferences: ^2.2.2
+  # firebase_messaging: ^14.7.1
+  # firebase_core: ^2.19.0
 
 dev_dependencies:
   flutter_test:
@@ -158,6 +162,8 @@ flutter:
     - images/navUpDouble.png
     - images/navUp.png
     - images/borderIncomingCall.png
+    - images/nav_up_green.png
+    - images/nav_down_red.png
 
   #   - images/a_dot_ham.jpeg
 

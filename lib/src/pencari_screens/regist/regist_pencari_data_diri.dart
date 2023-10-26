@@ -99,7 +99,7 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri> {
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: const [
           Text(
             'Selamat Datang 👋',
             style: TextStyle(

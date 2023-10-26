@@ -2,15 +2,18 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:prt/main.dart';
+import 'package:prt/src/api/auth_model.dart';
+import 'package:prt/src/api/fetch_data.dart';
+import 'package:prt/src/api/fetch_user_data.dart';
 import 'package:prt/src/models/time_interview.dart';
-import 'package:prt/src/models/user_model.dart';
 import 'package:prt/src/provider/user_provider.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/limit_text.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
 
 class DetailProfilePage extends StatefulWidget {
-  final User user;
+  final UserProfile user;
 
   const DetailProfilePage({super.key, required this.user});
 
@@ -33,6 +36,23 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   TimeOfDay? selectedTime;
   final List<String> time = ['9:00', '10:00', '12:00', '20.00'];
   int selectedTimeIndex = -1;
+
+  VideoCall videocall = VideoCall();
+  late String? channelName = ''; 
+  late String? token = ''; 
+
+  late FetchData fetchData;
+  late String authToken;
+  late String id;
+
+  @override
+  void initState() {
+    super.initState();
+    authToken = '1|wLQRRxEnI5e4U6LMb6dUn49LJovzoUwKy8rUq9lh66972726';
+    id = '1';
+    fetchData = FetchData(authToken, id);
+    videocall;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +125,10 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   selengkapnyaContent() {
+    List<String> skills = widget.user.profile['skill']
+        .map<String>((skill) => skill['name'].toString())
+        .toList();
+
     return AnimatedContainer(
       duration: Duration(milliseconds: 500),
       height: isSelengkapnyaPressed ? 230 : 0,
@@ -129,7 +153,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  widget.user.tempatTinggal,
+                  widget.user.profile["alamat_sekarang"],
                   style: TextStyle(
                     color: Color(0xFF828993),
                     fontSize: 10,
@@ -150,7 +174,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  widget.user.agama,
+                  widget.user.profile["agama"],
                   style: TextStyle(
                     color: Color(0xFF828993),
                     fontSize: 10,
@@ -173,7 +197,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                   width: 300,
                   child: Wrap(
                     spacing: 4,
-                    children: widget.user.keahlian.map((value) {
+                    children: skills.map((value) {
                       return Chip(
                         label: Text(value),
                         labelStyle: TextStyle(
@@ -229,10 +253,24 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               ),
             ),
             child: GestureDetector(
-              onTap: () {},
+              onTap: () async {
+                try {
+                  final data = await fetchData.createTokenVideocall();
+                  setState(() {
+                    channelName = data['Name'];
+                    token = data['Token'];
+                  });
+                } catch (e) {
+                  print(e);
+                }
+                Navigator.pushNamed(context, '/videocall', arguments: {
+                  'channel': "WfCp7xTmj5Yt5sR4AyVwUeLrCzOpgv",
+                  'token': "007eJxTYJCesMVYZZmOv8e0J1uuTj++9JwwP9vr1efzf77l43W24J+owGBoYZJimZRmmmRpbGlilGZgYZxqmWJuaZZqam6UamCeLG5nlirAx8Bw9M9hBkYgZAFiEJ8JTDKDSRYwKccQnuZcYF4RkptlGlliWhxk4lgZVh6a6lPkXOVfkF7GyGAAAJgbJwY=",
+                });
+              },
               child: Center(
                 child: Image.asset(
-                  'images/Message.png',
+                  'images/InterviewGreen.png',
                 ),
               ),
             ),
@@ -256,7 +294,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           ),
         ),
         Text(
-          widget.user.price,
+          widget.user.profile["gaji"].toString(),
           style: TextStyle(
             color: Color(0xFF080C11),
             fontSize: 16,
@@ -273,7 +311,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
       TextSpan(
         children: [
           TextSpan(
-            text: widget.user.description,
+            text: widget.user.profile["deskripsi"],
             style: TextStyle(
               color: Color(0xFF828993),
               fontSize: 10,
@@ -298,37 +336,51 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                       setState(() {
                         isSelengkapnyaPressed = true;
                       });
-                    }),
+                    },
+                ),
         ],
       ),
     );
   }
 
-  void _toggleUserLikedStatus(User user) {
+  void _toggleUserLikedStatus(UserProfile user) {
     final newIsLiked = !user.isLiked;
     final userProvider = UserProvider(); // Create an instance
     userProvider.updateUserLikedStatus(
-        user.id, newIsLiked); // Call the method on the instance
+        user.profile["id"], newIsLiked); // Call the method on the instance
   }
 
   Widget _buildUserList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.only(top: 6),
-      itemCount: userList.length,
-      itemBuilder: (context, index) {
-        final user = userList[index];
-        if (user == widget.user) {
-          return Container();
+    return FutureBuilder<List<UserProfile?>>(
+      future: fetchUserProfiles(), // Panggil fungsi fetchUserProfiles
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Terjadi kesalahan: ${snapshot.error}');
         } else {
-          return _buildUserListItem(user);
+          final userProfiles = snapshot.data ?? [];
+
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.only(top: 6),
+            itemCount: userProfiles.length,
+            itemBuilder: (context, index) {
+              final user = userProfiles[index];
+              if (user == widget.user) {
+                return Container();
+              } else {
+                return _buildUserListItem(user!);
+              }
+            },
+          );
         }
       },
     );
   }
 
-  _buildUserListItem(User user) {
+  _buildUserListItem(UserProfile user) {
     final Color loveColor = user.isLiked ? Color(0xFFFF0E0E) : Colors.white;
     return Column(
       children: [
@@ -347,7 +399,8 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     image: DecorationImage(
-                      image: AssetImage(user.imageUrl),
+                      image: NetworkImage(
+                          "$serverPath${user.profile["foto_setengah_badan"]}"),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -397,7 +450,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                         child: Stack(
                           children: [
                             Text(
-                              user.type,
+                              user.category["name"],
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 8,
@@ -410,7 +463,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                         ),
                       ),
                       Text(
-                        user.name,
+                        user.profile["nama_lengkap"],
                         style: TextStyle(
                           color: Color(0xFF080C11),
                           fontSize: 14,
@@ -432,7 +485,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                                 ),
                                 SizedBox(width: 2),
                                 Text(
-                                  user.star,
+                                  user.profile["rating"],
                                   style: TextStyle(
                                     color: Color(0xFF080C11),
                                     fontSize: 8,
@@ -450,7 +503,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                                   height: 14,
                                 ),
                                 Text(
-                                  '${user.age}',
+                                  user.profile["usia"],
                                   style: TextStyle(
                                     color: Color(0xFF080C11),
                                     fontSize: 8,
@@ -471,7 +524,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                                   width: 2,
                                 ),
                                 Text(
-                                  '${user.experience}',
+                                  user.profile["lama_pengalaman_bekerja"],
                                   style: TextStyle(
                                     color: Color(0xFF080C11),
                                     fontSize: 8,
@@ -487,7 +540,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                       SizedBox(
                         width: 150,
                         child: Text(
-                          limitText(user.description, 45),
+                          limitText(user.profile["deskripsi"], 45),
                           style: TextStyle(
                             color: Color(0xFF828993),
                             fontSize: 8,
@@ -498,7 +551,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                       ),
                       SizedBox(height: 0.1),
                       Text(
-                        'Rp. ${user.price}',
+                        'Rp. ${user.profile["gaji"]}',
                         style: TextStyle(
                           color: Color(0xFF080C11),
                           fontSize: 11,
@@ -612,7 +665,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               ),
               SizedBox(width: 4),
               Text(
-                widget.user.star,
+                widget.user.profile["rating"],
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 10,
@@ -631,7 +684,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               ),
               SizedBox(width: 2),
               Text(
-                '${widget.user.age} thn',
+                '${widget.user.profile["usia"]} thn',
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 10,
@@ -650,7 +703,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               ),
               SizedBox(width: 4),
               Text(
-                '${widget.user.experience} thn',
+                '${widget.user.profile["lama_pengalaman_bekerja"]} thn',
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 10,
@@ -672,7 +725,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            widget.user.name,
+            widget.user.profile["nama_lengkap"],
             style: TextStyle(
               color: Color(0xFF080C11),
               fontSize: 18,
@@ -690,7 +743,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
             child: Stack(
               children: [
                 Text(
-                  widget.user.type,
+                  widget.user.category["name"],
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 8,
@@ -716,8 +769,8 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
         ),
-        child: Image.asset(
-          widget.user.imageUrl,
+        child: Image.network(
+          "$serverPath${widget.user.profile["foto_setengah_badan"]}",
           fit: BoxFit.cover,
         ),
       ),

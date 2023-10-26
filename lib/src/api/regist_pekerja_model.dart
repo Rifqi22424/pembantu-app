@@ -3,20 +3,18 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:prt/main.dart';
+import 'package:prt/src/database/shared_preferences.dart';
 
 class RegistPekerjaModel {
-  final String baseUrl = 'http://192.168.1.3:8000/api';
-  final String authToken;
-  final String id;
-
-  RegistPekerjaModel({required this.authToken, required this.id});
+  final String baseUrl = '$serverPath/api/';
 
   Future<bool> registerFirstPage(String role) async {
+    int? userId = await getIdFromSharedPreferences();
     final response = await http.put(
-      Uri.parse('$baseUrl/profiles/step-1/'),
+      Uri.parse('$baseUrl/profiles/step-1/$userId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $authToken',
       },
       body: jsonEncode(<String, String>{'name': role}),
     );
@@ -47,11 +45,11 @@ class RegistPekerjaModel {
       'jenis_kelamin': jenisKelamin,
     };
 
+    int? userId = await getIdFromSharedPreferences();
     final response = await http.put(
-      Uri.parse('$baseUrl/profiles/step-2/'),
+      Uri.parse('$baseUrl/profiles/step-2/$userId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $authToken',
       },
       body: jsonEncode(requestData),
     );
@@ -81,11 +79,11 @@ class RegistPekerjaModel {
       'status_menikah': statusMenikah,
     };
 
+    int? userId = await getIdFromSharedPreferences();
     final response = await http.put(
-      Uri.parse('$baseUrl/profiles/step-3/'),
+      Uri.parse('$baseUrl/profiles/step-3/$userId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $authToken',
       },
       body: jsonEncode(requestData),
     );
@@ -110,11 +108,11 @@ class RegistPekerjaModel {
       'teman_alamat_sekarang': temanAlamatSekarang,
     };
 
+    int? userId = await getIdFromSharedPreferences();
     final response = await http.put(
-      Uri.parse('$baseUrl/profiles/step-4/'),
+      Uri.parse('$baseUrl/profiles/step-4/$userId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $authToken',
       },
       body: jsonEncode(requestData),
     );
@@ -132,6 +130,7 @@ class RegistPekerjaModel {
     String lamaPengalamanBekerja,
     String pendidikanTerakhir,
     String gaji,
+    String skill,
   ) async {
     final Map<String, dynamic> requestData = {
       'profesi': profesi,
@@ -139,13 +138,14 @@ class RegistPekerjaModel {
       'lama_pengalaman_bekerja': lamaPengalamanBekerja,
       'pendidikan_terakhir': pendidikanTerakhir,
       'gaji': gaji,
+      'skill': skill,
     };
 
+    int? userId = await getIdFromSharedPreferences();
     final response = await http.put(
-      Uri.parse('$baseUrl/profiles/step-5/'),
+      Uri.parse('$baseUrl/profiles/step-5/$userId'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $authToken',
       },
       body: jsonEncode(requestData),
     );
@@ -153,7 +153,7 @@ class RegistPekerjaModel {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception('Something Wrong');
+      throw Exception(response.statusCode);
     }
   }
 
@@ -165,7 +165,6 @@ class RegistPekerjaModel {
     File selectedSertifImg,
   ) async {
     final dio = Dio();
-    dio.options.headers['Authorization'] = 'Bearer $authToken';
 
     final formData = FormData.fromMap({
       'foto_ktp': await MultipartFile.fromFile(selectedKTPimg.path,
@@ -182,8 +181,9 @@ class RegistPekerjaModel {
     });
 
     try {
+      int? userId = await getIdFromSharedPreferences();
       final response = await dio.post(
-        '$baseUrl/profiles/step-6/',
+        '$baseUrl/profiles/step-6/$userId',
         data: formData,
         options: Options(
           contentType: 'multipart/form-data',

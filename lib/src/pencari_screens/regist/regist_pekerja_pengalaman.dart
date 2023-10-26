@@ -48,9 +48,9 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman> {
   @override
   void initState() {
     super.initState();
-    authToken = '1|F66Hl9KKOXXVDZeF7vHBNh8Xy67ooDlPLe92Gzgpa8caab24';
+    authToken = '1|wLQRRxEnI5e4U6LMb6dUn49LJovzoUwKy8rUq9lh66972726';
     id = '1';
-    pekerjaRegist = RegistPekerjaModel(authToken: authToken, id: id);
+    pekerjaRegist = RegistPekerjaModel();
     fetchData = FetchData(authToken, id);
     fetchSkillData();
     fecthCategoriesData();
@@ -98,7 +98,7 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman> {
                 children: [
                   SizedBox(height: screenHeight * 0.06),
                   navback(context),
-                  TopText(),
+                  topText(),
                   checklist(),
                   Container(
                     margin: EdgeInsets.only(top: 30),
@@ -268,13 +268,13 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman> {
     );
   }
 
-  Padding TopText() {
+  Padding topText() {
     return Padding(
       padding: const EdgeInsets.only(top: 40),
       child: Container(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: const [
             Text(
               'Silahkan Isi Pengalaman-mu',
               style: TextStyle(
@@ -348,6 +348,12 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman> {
         },
       ),
     );
+  }
+
+  changeListToStringSkill() {
+    List<String> skillss = selectedSkillList;
+    String skillString = skillss.join(':');
+    return skillString;
   }
 
   Widget _Skill() {
@@ -427,7 +433,7 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman> {
                 if (newValue != null) {
                   setState(() {
                     selectedSkillList.add(newValue);
-                    print(newValue);
+                    print(selectedSkillList);
                   });
                 }
               },
@@ -646,7 +652,7 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: const [
                       Text(
                         'Upload KTP',
                         style: TextStyle(
@@ -976,6 +982,7 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman> {
               pengalaman,
               selectedPendidikan.toString(),
               gaji,
+              changeListToStringSkill(),
             );
             bool successToo = await pekerjaRegist.registerSixthPage(
               selectedKTPImg!,

@@ -22,9 +22,9 @@ class _ChoosePageState extends State<ChoosePage> {
   @override
   void initState() {
     super.initState();
-    authToken = '1|F66Hl9KKOXXVDZeF7vHBNh8Xy67ooDlPLe92Gzgpa8caab24';
+    authToken = '1|wLQRRxEnI5e4U6LMb6dUn49LJovzoUwKy8rUq9lh66972726';
     id = '1';
-    pekerjaRegist = RegistPekerjaModel(authToken: authToken, id: id);
+    pekerjaRegist = RegistPekerjaModel();
   }
 
   @override
@@ -220,7 +220,7 @@ class _ChoosePageState extends State<ChoosePage> {
               if (isBoxPekerjaPressed) {
                 Navigator.pushNamed(context, '/registpekerjadatadiri');
               } else if (isBoxPencariPressed) {
-                Navigator.pushNamed(context, '/registpencaridatadiri');
+                Navigator.pushNamed(context, '/home');
               }
             } else {
               // Registrasi gagal, tambahkan penanganan error sesuai kebutuhan Anda

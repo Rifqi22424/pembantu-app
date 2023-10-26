@@ -1,16 +1,16 @@
 import 'dart:async';
-
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-const appId = "3e874f1eccfd454aaba44497474a4026";
-const token =
-    "007eJxTYFA+ttn168OKk2INx26VCF+8cPaT9d0de66HFNnYxjrv41qhwGCcamFukmaYmpyclmJiapKYmJRoYmJiaW5ibpJoYmBkNqlFLrUhkJHh9OoDzIwMEAjiszAk5yclMjAAABywIdw=";
-const channel = "coba";
+const appId = "184d9bf5b93942f083e9d796e572e07c";
 
 class VideoCall extends StatefulWidget {
-  const VideoCall({Key? key}) : super(key: key);
+  final String token;
+  final String channel;
+
+  VideoCall({required this.token, required this.channel});
 
   @override
   State<VideoCall> createState() => _MyAppState();
@@ -75,11 +75,23 @@ class _MyAppState extends State<VideoCall> {
     await _engine.startPreview();
 
     await _engine.joinChannel(
-      token: token,
-      channelId: channel,
+      token: widget.token,
+      channelId: widget.channel,
       uid: 0,
       options: const ChannelMediaOptions(),
     );
+  }
+
+  void toggleMuteCamera() async {
+    _isCameraMuted = !_isCameraMuted;
+    await _engine.muteLocalVideoStream(_isCameraMuted);
+    setState(() {});
+  }
+
+  void toggleMic() async {
+    _isMicMuted = !_isMicMuted;
+    await _engine.muteLocalAudioStream(_isMicMuted);
+    setState(() {});
   }
 
   void toggleReverseCamera() {
@@ -87,6 +99,36 @@ class _MyAppState extends State<VideoCall> {
     _engine.switchCamera();
     setState(() {});
   }
+
+//   void sendVideoCallNotification() async {
+//   FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+//   // Penerima notifikasi (FID atau token perangkat penerima)
+//   String receiverFID = "receiver_device_firebase_instance_id";
+
+//   // Pesan notifikasi
+//   RemoteNotification notification = const RemoteNotification(
+//     title: 'Video Call',
+//     body: 'Anda memiliki panggilan video masuk.',
+//   );
+
+//   // Data tambahan yang dapat Anda sertakan
+//   // Data tambahan yang dapat Anda sertakan
+// Map<String, dynamic> data = {
+//   'type': 'video_call',
+//   'from': 'pengirim_video_call_id',
+// };
+
+// // Konversi data tambahan ke Map<String, String>
+// Map<String, String> stringData = Map<String, String>.from(data);
+
+// // Kirim notifikasi
+// await messaging.sendMessage(
+//   to: receiverFID,
+//   data: stringData,
+// );
+
+// }
 
   // Create UI with local view and remote view
   @override
@@ -147,14 +189,19 @@ class _MyAppState extends State<VideoCall> {
 
   endCallButton() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        _engine.leaveChannel();
+        Navigator.pop(context);
+      },
       child: Image.asset('images/end_call.png', width: 60, height: 60),
     );
   }
 
   onOffCam() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        toggleMuteCamera();
+      },
       child: Container(
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -186,7 +233,9 @@ class _MyAppState extends State<VideoCall> {
 
   onOffMic() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        toggleMic();
+      },
       child: Container(
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -207,7 +256,7 @@ class _MyAppState extends State<VideoCall> {
         controller: VideoViewController.remote(
           rtcEngine: _engine,
           canvas: VideoCanvas(uid: _remoteUid),
-          connection: const RtcConnection(channelId: channel),
+          connection: RtcConnection(channelId: widget.channel),
         ),
       );
     } else {

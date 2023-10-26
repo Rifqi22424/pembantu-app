@@ -2,7 +2,7 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:prt/src/models/auth_model.dart';
+import 'package:prt/src/api/auth_model.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
 class LoginPage extends StatefulWidget {
@@ -390,28 +390,24 @@ class _LoginPageState extends State<LoginPage> {
         minimumSize:
             MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
       ),
-      onPressed:
-          // () async {
-          //   try {
-          //     bool login = await authService.login(
-          //       emailController.text,
-          //       passwordController.text,
-          //     );
-          //     if (login) {
-          //       formKey.currentState!.save();
-          //       print('Time to post $email and $password to my API');
-          //       Navigator.pushNamed(context, '/home');
-          //     } else {
-          //       print('something wrong');
-          //     }
-          //   } catch (e) {
-          //     print('this $e');
-          //   }
-          // },
-
-          () {
-        formKey.currentState!.save();
-        print('Time to post $email and $password to my API');
+      onPressed: () {
+        // if (formKey.currentState!.validate()) {
+        //   formKey.currentState!.save();
+        //   try {
+        //     String token = await authService.login(
+        //       email,
+        //       password,
+        //     );
+        //     if (token.isNotEmpty) {
+        //       SharedPreferences prefs = await SharedPreferences.getInstance();
+        //       await prefs.setString('auth_token', token);
+        //       print(token);
+        //       Navigator.pushNamed(context, '/home');
+        //     }
+        //   } catch (e) {
+        //     print('Error: $e');
+        //   }
+        // }
         Navigator.pushNamed(context, '/home');
       },
       child: Text(

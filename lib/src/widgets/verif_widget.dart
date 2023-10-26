@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:prt/src/api/auth_model.dart';
 
 class VerifCodeInput extends StatefulWidget {
   final VoidCallback onVerificationSuccess;
@@ -13,6 +14,7 @@ class VerifCodeInput extends StatefulWidget {
 
 class _VerifCodeInputState extends State<VerifCodeInput> {
   List<FocusNode> focusNodes = [];
+  final Auth authService = Auth();
   List<TextEditingController> controllers = [];
   int numberOfFields = 4;
 
@@ -64,7 +66,7 @@ class _VerifCodeInputState extends State<VerifCodeInput> {
     super.dispose();
   }
 
-  void _onFieldChanged(String value, int index) {
+  Future<void> _onFieldChanged(String value, int index) async {
     if (value.isNotEmpty) {
       if (index < numberOfFields - 1) {
         focusNodes[index + 1].requestFocus();
@@ -80,7 +82,20 @@ class _VerifCodeInputState extends State<VerifCodeInput> {
     }
 
     if (allFieldsFilled) {
-      widget.onVerificationSuccess();
+      // Panggil fungsi untuk mengirim kode verifikasi ke API
+      final List<String> verificationCode =
+          controllers.map((controller) => controller.text).toList();
+      print(verificationCode);
+      try {
+        bool success = await authService.sendVerificationCode(
+          verificationCode,
+        );
+        if (success) {
+          widget.onVerificationSuccess();
+        }
+      } catch (e) {
+        print('Error: $e');
+      }
     }
   }
 }

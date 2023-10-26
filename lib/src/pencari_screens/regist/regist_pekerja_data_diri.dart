@@ -42,10 +42,10 @@ class _RegistPekerjaDataDiriState extends State<RegistPekerjaDataDiri> {
   @override
   void initState() {
     super.initState();
-    authToken = '1|F66Hl9KKOXXVDZeF7vHBNh8Xy67ooDlPLe92Gzgpa8caab24';
+    authToken = '1|wLQRRxEnI5e4U6LMb6dUn49LJovzoUwKy8rUq9lh66972726';
     id = '1';
     fetchData = FetchData(authToken, id);
-    pekerjaRegist = RegistPekerjaModel(authToken: authToken, id: id);
+    pekerjaRegist = RegistPekerjaModel();
     fetchProvinsiData();
     fetchKotaData(selectedProvinsi);
     fetchKecamatanData(selectedKota);

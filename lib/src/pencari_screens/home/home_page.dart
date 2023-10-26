@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:prt/main.dart';
+import 'package:prt/src/api/fetch_user_data.dart';
 import 'package:prt/src/provider/user_provider.dart';
-import 'package:prt/src/models/user_model.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/limit_text.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
@@ -76,15 +77,15 @@ class _HomePageState extends State<HomePage> {
             ),
             GestureDetector(
               onTap: () {
+                final userList = userProvider.users;
+
                 Navigator.pushNamed(context, '/likedusers',
                     arguments: userList);
               },
               child: Row(
                 children: [
                   likedPageButton(),
-                  SizedBox(
-                    width: 10,
-                  ),
+                  SizedBox(width: 10),
                   notifPageButton(context),
                 ],
               ),
@@ -384,14 +385,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   floatingButton() {
-    return FloatingActionButton(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.white,
-      onPressed: () {},
-      child: Image.asset(
-        'images/Phone.png',
-        height: 24,
-        width: 24,
+    return GestureDetector(
+      onTap: () {},
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.white,
+        onPressed: () {},
+        child: Image.asset(
+          'images/Phone.png',
+          height: 24,
+          width: 24,
+        ),
       ),
     );
   }
@@ -423,37 +427,59 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _toggleUserLikedStatus(User user) {
+  void _toggleUserLikedStatus(UserProfile user) {
     final newIsLiked = !user.isLiked;
-    userProvider.updateUserLikedStatus(user.id, newIsLiked);
+    userProvider.updateUserLikedStatus(user.profile['id'], newIsLiked);
   }
 
   buildUserList() {
-    return Consumer<UserProvider>(
-      builder: (context, userProvider, child) {
-        final filteredUsers = selectedCategory != null
-            ? userProvider.users
-                .where((user) => user.type == selectedCategory)
-                .toList()
-            : userProvider.users;
-        return SizedBox(
-          width: 400,
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: BouncingScrollPhysics(),
-            padding: EdgeInsets.only(top: 6),
-            itemCount: filteredUsers.length,
-            itemBuilder: (context, index) {
-              final user = filteredUsers[index];
-              return buildUserListItem(user);
-            },
-          ),
-        );
+    return FutureBuilder<List<UserProfile>>(
+      future: fetchUserProfiles(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          final usersFromAPI = snapshot.data;
+          if (usersFromAPI == null || usersFromAPI.isEmpty) {
+            return Text('Tidak ada data.');
+          }
+
+            List<UserProfile> filteredUsers = [];
+
+          if (selectedCategory == null) {
+            filteredUsers = usersFromAPI;
+          } else {
+            filteredUsers = usersFromAPI.where((user) {
+              return user.category["name"] == selectedCategory;
+            }).toList();
+          }
+
+          if (filteredUsers.isEmpty) {
+            return Text("Tidak ada data");
+          }
+
+
+          return SizedBox(
+            width: 400,
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: BouncingScrollPhysics(),
+              padding: EdgeInsets.only(top: 6),
+              itemCount: filteredUsers.length,
+              itemBuilder: (context, index) {
+                final user = usersFromAPI[index];
+                return buildUserListItem(user);
+              },
+            ),
+          );
+        }
       },
     );
   }
 
-  buildUserListItem(User user) {
+  buildUserListItem(UserProfile user) {
     final Color loveColor = user.isLiked ? Color(0xFFFF0E0E) : Colors.white;
     return Column(
       children: [
@@ -466,173 +492,19 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.all(10),
             child: Row(
               children: [
-                Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    image: DecorationImage(
-                      image: AssetImage(user.imageUrl),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _toggleUserLikedStatus(user);
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 4, top: 4),
-                      child: Align(
-                        alignment: Alignment.topRight,
-                        child: Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: ShapeDecoration(
-                              color: Colors.black.withOpacity(0.2),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              )),
-                          child: Image.asset(
-                            'images/WhiteLove.png',
-                            width: 15,
-                            height: 15,
-                            color: loveColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                listImages(user, loveColor),
                 SizedBox(width: 16),
-                SizedBox(
+                Container(
                   height: 150,
-                  width: 150,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                        decoration: ShapeDecoration(
-                          color: Color(0xFFFFB84E),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24)),
-                        ),
-                        child: Stack(
-                          children: [
-                            Text(
-                              user.type,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 8,
-                                fontFamily: 'Asap',
-                                fontWeight: FontWeight.w400,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        user.name,
-                        style: TextStyle(
-                          color: Color(0xFF080C11),
-                          fontSize: 14,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 150,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Image.asset(
-                                  'images/Star.png',
-                                  width: 11,
-                                  height: 11,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  user.star,
-                                  style: TextStyle(
-                                    color: Color(0xFF080C11),
-                                    fontSize: 8,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                )
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Image.asset(
-                                  'images/PeopleIcon.png',
-                                  width: 14,
-                                  height: 14,
-                                ),
-                                SizedBox(width: 2),
-                                Text(
-                                  '${user.age} thn',
-                                  style: TextStyle(
-                                    color: Color(0xFF080C11),
-                                    fontSize: 8,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                )
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Image.asset(
-                                  'images/TimeIcon.png',
-                                  width: 9,
-                                  height: 9,
-                                ),
-                                SizedBox(width: 3),
-                                Text(
-                                  '${user.experience} thn',
-                                  style: TextStyle(
-                                    color: Color(0xFF080C11),
-                                    fontSize: 8,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 150,
-                        child: Text(
-                          limitText(user.description, 60),
-                          style: TextStyle(
-                            color: Color(0xFF828993),
-                            fontSize: 8,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2.0),
-                        child: Text(
-                          'Rp. ${user.price}',
-                          style: TextStyle(
-                            color: Color(0xFF080C11),
-                            fontSize: 11,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      )
+                      userTypes(user),
+                      userNames(user),
+                      userRatings(user),
+                      userDescriptions(user),
+                      userPrices(user)
                     ],
                   ),
                 ),
@@ -640,14 +512,197 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Divider(
-            thickness: 2,
-            color: Color(0xFFF5F5F5),
+        greyLine(),
+      ],
+    );
+  }
+
+  Padding greyLine() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Divider(
+        thickness: 2,
+        color: Color(0xFFF5F5F5),
+      ),
+    );
+  }
+
+  userPrices(UserProfile user) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2.0),
+      child: Text(
+        'Rp. ${user.profile["gaji"]}',
+        style: TextStyle(
+          color: Color(0xFF080C11),
+          fontSize: 11,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  SizedBox userDescriptions(UserProfile user) {
+    return SizedBox(
+      width: 150,
+      child: Text(
+        limitText(user.profile["deskripsi"], 60),
+        style: TextStyle(
+          color: Color(0xFF828993),
+          fontSize: 8,
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+    );
+  }
+
+  Container userRatings(UserProfile user) {
+    return Container(
+      width: 110,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Image.asset(
+                'images/Star.png',
+                width: 11,
+                height: 11,
+              ),
+              SizedBox(width: 2),
+              Text(
+                '${user.profile["rating"]}',
+                style: TextStyle(
+                  color: Color(0xFF080C11),
+                  fontSize: 8,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                ),
+              )
+            ],
+          ),
+          Container(
+            child: Row(
+              children: [
+                Image.asset(
+                  'images/PeopleIcon.png',
+                  width: 14,
+                  height: 14,
+                ),
+                Text(
+                  user.profile["usia"],
+                  style: TextStyle(
+                    color: Color(0xFF080C11),
+                    fontSize: 8,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                  ),
+                )
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              Image.asset(
+                'images/TimeIcon.png',
+                width: 9,
+                height: 9,
+              ),
+              SizedBox(
+                width: 2,
+              ),
+              Text(
+                '${user.profile["lama_pengalaman_bekerja"]}',
+                style: TextStyle(
+                  color: Color(0xFF080C11),
+                  fontSize: 8,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                ),
+              )
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Text userNames(UserProfile user) {
+    return Text(
+      user.profile["nama_lengkap"],
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 14,
+        fontFamily: 'Inter',
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Container userTypes(UserProfile user) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: ShapeDecoration(
+        color: Color(0xFFFFB84E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      child: Stack(
+        children: [
+          Text(
+            user.category["name"],
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 8,
+              fontFamily: 'Asap',
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container listImages(UserProfile user, Color loveColor) {
+    return Container(
+      width: 150,
+      height: 150,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        image: DecorationImage(
+          image: NetworkImage(
+                          "$serverPath${user.profile["foto_setengah_badan"]}"),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _toggleUserLikedStatus(user);
+          });
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(right: 4, top: 4),
+          child: Align(
+            alignment: Alignment.topRight,
+            child: Container(
+              padding: EdgeInsets.all(8),
+              decoration: ShapeDecoration(
+                  color: Colors.black.withOpacity(0.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  )),
+              child: Image.asset(
+                'images/WhiteLove.png',
+                width: 15,
+                height: 15,
+                color: loveColor,
+              ),
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 

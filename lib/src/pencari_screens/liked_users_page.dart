@@ -2,13 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prt/src/models/user_model.dart';
+import 'package:prt/src/api/fetch_user_data.dart';
 import 'package:prt/src/provider/user_provider.dart';
 import 'package:prt/src/widgets/limit_text.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
 
 class LikedUsersPage extends StatefulWidget {
-  final List<User> userList;
+  final List<UserProfile> userList;
   const LikedUsersPage({super.key, required this.userList});
 
   @override
@@ -17,7 +17,7 @@ class LikedUsersPage extends StatefulWidget {
 
 class _LikedUsersPageState extends State<LikedUsersPage> {
   final UserProvider userProvider = UserProvider();
-  List<User> likedUsers = [];
+  List<UserProfile> likedUsers = [];
 
   @override
   void initState() {
@@ -42,16 +42,16 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
     );
   }
 
-  void _toggleUserLikedStatus(User user) {
+  void _toggleUserLikedStatus(UserProfile user) {
     final newIsLiked = !user.isLiked;
-    userProvider.updateUserLikedStatus(user.id, newIsLiked);
+    userProvider.updateUserLikedStatus(user.profile["id"], newIsLiked);
   }
 
   Widget _buildUserList() {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         final likedUsers =
-            userProvider.users.where((user) => user.isLiked).toList();
+            userProvider.users.where((user) => user!.isLiked).toList();
         return ListView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
@@ -59,14 +59,14 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
           itemCount: likedUsers.length,
           itemBuilder: (context, index) {
             final user = likedUsers[index];
-            return _buildUserListItem(user);
+            return _buildUserListItem(user!);
           },
         );
       },
     );
   }
 
-  _buildUserListItem(User user) {
+  _buildUserListItem(UserProfile user) {
     final Color loveColor = user.isLiked ? Color(0xFFFF0E0E) : Colors.white;
     return Column(
       children: [
@@ -85,7 +85,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     image: DecorationImage(
-                      image: AssetImage(user.imageUrl),
+                      image: NetworkImage(user.profile["foto_setengah_badan"]),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -135,7 +135,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                         child: Stack(
                           children: [
                             Text(
-                              user.type,
+                              user.category["name"],
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 8,
@@ -148,7 +148,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                         ),
                       ),
                       Text(
-                        user.name,
+                        user.profile["nama_lengkap"],
                         style: TextStyle(
                           color: Color(0xFF080C11),
                           fontSize: 14,
@@ -170,7 +170,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                                 ),
                                 SizedBox(width: 2),
                                 Text(
-                                  user.star,
+                                  user.profile["rating"],
                                   style: TextStyle(
                                     color: Color(0xFF080C11),
                                     fontSize: 8,
@@ -188,7 +188,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                                   height: 14,
                                 ),
                                 Text(
-                                  '${user.age}',
+                                  user.profile["usia"],
                                   style: TextStyle(
                                     color: Color(0xFF080C11),
                                     fontSize: 8,
@@ -209,7 +209,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                                   width: 2,
                                 ),
                                 Text(
-                                  '${user.experience}',
+                                  user.profile["lama_pengalaman_bekerja"],
                                   style: TextStyle(
                                     color: Color(0xFF080C11),
                                     fontSize: 8,
@@ -225,7 +225,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                       SizedBox(
                         width: 150,
                         child: Text(
-                          limitText(user.description, 60),
+                          limitText(user.profile["deskripsi"], 60),
                           style: TextStyle(
                             color: Color(0xFF828993),
                             fontSize: 8,
@@ -237,7 +237,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
                       Padding(
                         padding: const EdgeInsets.only(top: 2.0),
                         child: Text(
-                          'Rp. ${user.price}',
+                          'Rp. ${user.profile["gaji"]}',
                           style: TextStyle(
                             color: Color(0xFF080C11),
                             fontSize: 11,

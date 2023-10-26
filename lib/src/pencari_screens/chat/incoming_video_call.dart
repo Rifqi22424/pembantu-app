@@ -13,6 +13,8 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
     with TickerProviderStateMixin {
   late Animation<double> callAnimation;
   late AnimationController callController;
+  double _top = 0.0;
+  double _bottom = 0.0;
 
   @override
   void initState() {
@@ -70,15 +72,87 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
                     const SizedBox(height: 12),
                     callStatue(),
                     Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        pickUpColumn(),
-                        rejectColumn(),
-                      ],
+                    GestureDetector(
+                      onPanUpdate: (details) {
+                        setState(() {
+                          double delta = details.delta.dy;
+                          double maxTop = 0;
+                          double minBottom = MediaQuery.of(context)
+                                  .size
+                                  .height -
+                              60; // 60 adalah tinggi elemen yang ingin digeser
+
+                          // Menghitung posisi atas dan bawah baru
+                          _top = (_top + delta).clamp(
+                              maxTop,
+                              minBottom -
+                                  60); // 60 adalah tinggi elemen yang ingin digeser
+                          _bottom = (_bottom + delta).clamp(maxTop + 60,
+                              minBottom); // 60 adalah tinggi elemen yang ingin digeser
+                        });
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Column(
+                            children: [
+                              Image.asset(
+                                'images/nav_up_green.png',
+                                width: 20,
+                                height: 22,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Angkat',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontFamily: 'Asap',
+                                  fontWeight: FontWeight.w400,
+                                  height: 0,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 60,
+                                width: 60,
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Tolak',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontFamily: 'Asap',
+                                  fontWeight: FontWeight.w400,
+                                  height: 0,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Image.asset(
+                                'images/nav_down_red.png',
+                                width: 20,
+                                height: 22,
+                              ),
+                            ],
+                          ),
+                          Positioned(
+                            top: _top,
+                            bottom: _bottom,
+                            child: Image.asset(
+                              'images/InterviewGreen.png',
+                              width: 60,
+                              height: 60,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    SizedBox(height: 12),
-                    swipeUp()
+                    SizedBox(
+                      height: 60,
+                    )
                   ],
                 ),
               ),
@@ -86,74 +160,6 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
           ],
         ),
       ),
-    );
-  }
-
-  swipeUp() {
-    return Image.asset(
-      'images/navUp.png',
-      height: 40,
-      width: 40,
-    );
-  }
-
-  Column rejectColumn() {
-    return Column(
-      children: [
-        Image.asset(
-          'images/navUpDouble.png',
-          width: 19,
-          height: 22,
-        ),
-        SizedBox(height: 20),
-        Image.asset(
-          'images/rejectCall.png',
-          width: 60,
-          height: 60,
-        ),
-        SizedBox(height: 20),
-        const Text(
-          'Tolak',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 0,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column pickUpColumn() {
-    return Column(
-      children: [
-        Image.asset(
-          'images/navUpDouble.png',
-          width: 19,
-          height: 22,
-        ),
-        SizedBox(height: 20),
-        Image.asset(
-          'images/pickUpCall.png',
-          width: 60,
-          height: 60,
-        ),
-        SizedBox(height: 20),
-        const Text(
-          'Angkat',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 0,
-          ),
-        ),
-      ],
     );
   }
 

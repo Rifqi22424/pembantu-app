@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:prt/main.dart';
 
 class FetchData {
-  final String? baseUrl = 'http://192.168.1.3:8000/api';
+  final String? baseUrl = '$serverPath/api';
   final String? authToken;
   final String? id;
 
   FetchData(this.authToken, this.id);
 
-  Future<Map<String, dynamic>> fetchProvinsiData() async {  
+  Future<Map<String, dynamic>> fetchProvinsiData() async {
     final response = await http.get(
       Uri.parse('$baseUrl/provinsi'),
       headers: <String, String>{
@@ -97,6 +98,21 @@ class FetchData {
       return value;
     } else {
       throw Exception('Gagal mengambil data skills');
+    }
+  }
+
+  Future<Map<String, dynamic>> createTokenVideocall() async {
+    final response =
+        await http.get(Uri.parse('$baseUrl/agora/'), headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer $authToken',
+    });
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final value = data['data'];
+      return value;
+    } else {
+      throw Exception('gagal mengambil token');
     }
   }
 }
