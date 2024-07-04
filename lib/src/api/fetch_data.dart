@@ -1,21 +1,19 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:prt/main.dart';
+import 'package:prt/src/database/shared_preferences.dart';
 
 class FetchData {
   final String? baseUrl = '$serverPath/api';
-  final String? authToken;
   final String? id;
 
-  FetchData(this.authToken, this.id);
+  FetchData(this.id);
 
   Future<Map<String, dynamic>> fetchProvinsiData() async {
     final response = await http.get(
       Uri.parse('$baseUrl/provinsi'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization':
-            'Bearer $authToken', // Tambahkan token Authorization ke header
       },
     );
 
@@ -32,8 +30,6 @@ class FetchData {
       Uri.parse('$baseUrl/cities/${selectedProvinsi ?? ''}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization':
-            'Bearer $authToken', // Tambahkan token Authorization ke header
       },
     );
 
@@ -50,8 +46,6 @@ class FetchData {
       Uri.parse('$baseUrl/districts/${selectedKota ?? ''}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization':
-            'Bearer $authToken', // Tambahkan token Authorization ke header
       },
     );
 
@@ -65,11 +59,11 @@ class FetchData {
 
   Future<List<dynamic>> fetchSkillsData() async {
     final response = await http.get(
-      Uri.parse('$baseUrl/skills'),
+      Uri.parse('$serverPath/api/skills'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization':
-            'Bearer $authToken', // Tambahkan token Authorization ke header
+            'Bearer 2|HwLUDE60MVnRLH58SxfbxGZgeinTWDgZDLZeR5v39bf325bd',
       },
     );
 
@@ -78,7 +72,7 @@ class FetchData {
       final value = data['data'];
       return value;
     } else {
-      throw Exception('Gagal mengambil data skills');
+      throw Exception(response.statusCode);
     }
   }
 
@@ -88,7 +82,7 @@ class FetchData {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization':
-            'Bearer $authToken', // Tambahkan token Authorization ke header
+            'Bearer 2|HwLUDE60MVnRLH58SxfbxGZgeinTWDgZDLZeR5v39bf325bd',
       },
     );
 
@@ -102,10 +96,12 @@ class FetchData {
   }
 
   Future<Map<String, dynamic>> createTokenVideocall() async {
+    String? userToken = await getTokenFromSharedPreferences();
+    print(userToken);
     final response =
         await http.get(Uri.parse('$baseUrl/agora/'), headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer $authToken',
+      'Authorization': 'Bearer $userToken',
     });
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);

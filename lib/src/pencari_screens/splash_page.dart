@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../database/shared_preferences.dart';
+
 class SplashPage extends StatelessWidget {
   const SplashPage({Key? key});
 
@@ -15,8 +17,19 @@ class SplashPage extends StatelessWidget {
   }
 
   void _delayAndPush(BuildContext context) {
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/welcome');
+    Future.delayed(Duration(milliseconds: 1000), () async {
+      String? userToken = await getTokenFromSharedPreferences();
+      String? role = await getRoleFromSharedPreferences();
+      print(role);
+      if (userToken == null || userToken == 'deleted') {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      } else {
+        if (role == 'majikan') {
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          Navigator.pushReplacementNamed(context, '/homepekerja');
+        }
+      }
     });
   }
 

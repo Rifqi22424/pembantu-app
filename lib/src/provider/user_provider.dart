@@ -7,9 +7,9 @@ import 'package:prt/src/api/fetch_user_data.dart';
 
 class UserProvider with ChangeNotifier {
 
-  late List<UserProfile?> _users = [];
+  late List<UserProfile> _users = [];
 
-  List<UserProfile?> get users => _users;
+  List<UserProfile> get users => _users;
 
   Future<void> fetchUsersFromApi() async {
     try {
@@ -23,9 +23,9 @@ class UserProvider with ChangeNotifier {
 
   void updateUserLikedStatus(int userId, bool isLiked) {
     final userIndex =
-        _users.indexWhere((user) => user!.profile["id"] == userId);
+        _users.indexWhere((user) => user.profile["id"] == userId);
     if (userIndex != -1) {
-      _users[userIndex]!.isLiked = isLiked;
+      _users[userIndex].isLiked = isLiked;
       notifyListeners();
     }
   }

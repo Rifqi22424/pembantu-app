@@ -28,44 +28,49 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  agora_rtc_engine: ^6.2.6
+  auto_size_text: ^3.0.0
+  awesome_notifications: ^0.8.2
+  cupertino_icons: ^1.0.2
+  dio: ^5.3.2
+  equatable: ^2.0.5
+  firebase_core: ^2.20.0
+  firebase_messaging: ^14.7.2
+  firebase_messaging_platform_interface: ^4.5.15
   flutter:
     sdk: flutter
-
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
-  path: ^1.8.3
-  flutter_dash: ^1.0.0
-  image_picker: ^1.0.2
-  provider: ^6.0.5
-  agora_rtc_engine: ^6.2.2
-  permission_handler: ^10.4.3
-  pin_code_fields: ^8.0.1 
   flutter_bloc: ^8.1.3
-  equatable: ^2.0.5
+  flutter_callkeep: ^0.3.3
+  flutter_dash: ^1.0.0
+  flutter_image_compress: ^2.3.0
+  flutter_local_notifications: ^16.2.0
+  flutter_ringtone_player: ^3.2.0
+  flutter_slidable: ^3.0.0
+  fluttertoast: ^8.2.2
   http: ^1.1.0
-  dio: ^5.3.2
   http_parser: ^4.0.2
-  sqflite: ^2.3.0
+  image_picker: ^1.0.2
+  intl: ^0.18.1
+  mime: ^1.0.5
+  overlay_support: ^2.1.0
+  path: ^1.8.3
+  path_provider: ^2.1.3
+  permission_handler: ^10.4.3
+  pin_code_fields: ^8.0.1
+  provider: ^6.0.5
   shared_preferences: ^2.2.2
-  # firebase_messaging: ^14.7.1
-  # firebase_core: ^2.19.0
+  sqflite: ^2.3.0
+  table_calendar: ^3.0.9
+  uuid: ^4.2.1
+  vibration: ^1.8.3
 
 dev_dependencies:
+  flutter_lints: ^2.0.0
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^2.0.0
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
 # The following section is specific to Flutter packages.
 flutter:
 
@@ -76,108 +81,106 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - images/splashImages.png
-    - images/mother.jpeg
-    - images/GoogleLogo.png
-    - images/FacebookLogo.png
-    - images/Pembantu.png
-    - images/Pencari.png
-    - images/check.png
-    - images/emptyCheck.png
-    - images/filCheck.png
-    - images/option.png
-    - images/NavigateBack.png
-    - images/exclamation.png
-    - images/Love.png
-    - images/Bell.png
-    - images/search.png
-    - images/filter.png
-    - images/SaldoBg.png
-    - images/NavigateNext.png
-    - images/Add.png
-    - images/Dolar.png
-    - images/PeopleIcon.png
-    - images/TimeIcon.png
-    - images/WhiteLove.png
-    - images/Phone.png
-    - images/Home.png
-    - images/Dolar.png
-    - images/Message.png
-    - images/User.png
-    - images/Ava.jpg
-    - images/David.jpg
-    - images/Emily.jpg
-    - images/John.jpg
-    - images/Michael.jpg
-    - images/Olivia.jpg
-    - images/Robert.jpg
-    - images/Sarah.jpg
-    - images/Sophia.jpg
-    - images/William.jpg
-    - images/NavBackTransparant.png
-    - images/dolarStack.png
-    - images/announce.png
-    - images/HomePlain.png
-    - images/Star.png
-    - images/TopUpBG.png
-    - images/x.png
-    - images/PayMethodBG.png
-    - images/PayMethodDownBG.png
-    - images/wallet.png
-    - images/NavNext.png
-    - images/BRILogo.png
-    - images/BCALogo.png
-    - images/MandiriLogo.png
-    - images/BNILogo.png
-    - images/MessageGreen.png
-    - images/AppBarChatBG.png
-    - images/NavBackGreen.png
-    - images/InterviewGreen.png
-    - images/sent.png
-    - images/rantai.png
-    - images/dolarGreen.png
-    - images/profileBG.png
-    - images/NavNextNoBG.png
-    - images/location.png
-    - images/key.png
-    - images/questionMark.png
-    - images/exclamationMark.png
-    - images/documentSign.png
-    - images/logoutSign.png
-    - images/xNoBG.png
-    - images/pembatuWhite.png
-    - images/pencariWhite.png
-    - images/end_call.png
-    - images/mic_off.png
-    - images/reverse_cam.png
-    - images/cam_off.png
-    - images/cam.png
-    - images/mic.png
-    - images/interviewTransparant.png
-    - images/jadwalSet.png
-    - images/incomingCallBG.png
-    - images/incomingCallPhotoDumb.png
-    - images/pickUpCall.png
-    - images/rejectCall.png
-    - images/navUpDouble.png
-    - images/navUp.png
-    - images/borderIncomingCall.png
-    - images/nav_up_green.png
-    - images/nav_down_red.png
-
-  #   - images/a_dot_ham.jpeg
-
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/assets-and-images/#from-packages
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
+    - images/
+    # - images/splashImages.png
+    # - images/mother.jpeg
+    # - images/GoogleLogo.png
+    # - images/FacebookLogo.png
+    # - images/Pembantu.png
+    # - images/Pencari.png
+    # - images/check.png
+    # - images/emptyCheck.png
+    # - images/filCheck.png
+    # - images/option.png
+    # - images/NavigateBack.png
+    # - images/exclamation.png
+    # - images/Love.png
+    # - images/Bell.png
+    # - images/search.png
+    # - images/filter.png
+    # - images/SaldoBg.png
+    # - images/NavigateNext.png
+    # - images/Add.png
+    # - images/Dolar.png
+    # - images/PeopleIcon.png
+    # - images/TimeIcon.png
+    # - images/WhiteLove.png
+    # - images/Phone.png
+    # - images/Home.png
+    # - images/Dolar.png
+    # - images/Message.png
+    # - images/User.png
+    # - images/Ava.jpg
+    # - images/David.jpg
+    # - images/Emily.jpg
+    # - images/John.jpg
+    # - images/Michael.jpg
+    # - images/Olivia.jpg
+    # - images/Robert.jpg
+    # - images/Sarah.jpg
+    # - images/Sophia.jpg
+    # - images/William.jpg
+    # - images/NavBackTransparant.png
+    # - images/dolarStack.png
+    # - images/announce.png
+    # - images/HomePlain.png
+    # - images/Star.png
+    # - images/TopUpBG.png
+    # - images/x.png
+    # - images/PayMethodBG.png
+    # - images/PayMethodDownBG.png
+    # - images/wallet.png
+    # - images/NavNext.png
+    # - images/BRILogo.png
+    # - images/BCALogo.png
+    # - images/MandiriLogo.png
+    # - images/BNILogo.png
+    # - images/MessageGreen.png
+    # - images/AppBarChatBG.png
+    # - images/NavBackGreen.png
+    # - images/InterviewGreen.png
+    # - images/sent.png
+    # - images/rantai.png
+    # - images/dolarGreen.png
+    # - images/profileBG.png
+    # - images/NavNextNoBG.png
+    # - images/location.png
+    # - images/key.png
+    # - images/questionMark.png
+    # - images/exclamationMark.png
+    # - images/documentSign.png
+    # - images/logoutSign.png
+    # - images/xNoBG.png
+    # - images/pembatuWhite.png
+    # - images/pencariWhite.png
+    # - images/end_call.png
+    # - images/mic_off.png
+    # - images/reverse_cam.png
+    # - images/cam_off.png
+    # - images/cam.png
+    # - images/mic.png
+    # - images/interviewTransparant.png
+    # - images/jadwalSet.png
+    # - images/incomingCallBG.png
+    # - images/incomingCallPhotoDumb.png
+    # - images/pickUpCall.png
+    # - images/rejectCall.png
+    # - images/navUpDouble.png
+    # - images/navUp.png
+    # - images/borderIncomingCall.png
+    # - images/nav_up_green.png
+    # - images/nav_down_red.png
+    # - images/xNoWhite.png
+    #   - images/a_dot_ham.jpeg
+    # An image asset can refer to one or more resolution-specific "variants", see
+    # https://flutter.dev/assets-and-images/#resolution-aware
+    # For details regarding adding assets from package dependencies, see
+    # https://flutter.dev/assets-and-images/#from-packages
+    # To add custom fonts to your application, add a fonts section here,
+    # in this "flutter" section. Each entry in this list should have a
+    # "family" key with the font family name, and a "fonts" key with a
+    # list giving the asset and other descriptors for the font. For
+    # example:
   fonts:
     - family: Inter
       fonts:

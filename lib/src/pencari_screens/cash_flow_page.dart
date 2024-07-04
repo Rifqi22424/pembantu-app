@@ -1,11 +1,37 @@
 // ignore_for_file: prefer_const_constructors, unnecessary_string_interpolations
 
 import 'package:flutter/material.dart';
-import 'package:prt/src/models/cash_flow_model.dart';
+import 'package:intl/intl.dart';
+import 'package:prt/src/api/digital_money.dart';
+import 'package:prt/src/database/shared_preferences.dart';
+import 'package:prt/src/models/transaction_model.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
+import 'package:prt/src/widgets/scroll_behavior.dart';
 
-class CashFlowPage extends StatelessWidget {
+import '../widgets/loading_history.dart';
+
+class CashFlowPage extends StatefulWidget {
   const CashFlowPage({super.key});
+
+  @override
+  State<CashFlowPage> createState() => _CashFlowPageState();
+}
+
+class _CashFlowPageState extends State<CashFlowPage> {
+  late Future<List<Transaction>> _fetchTransaction;
+  int? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTransaction = DigitalMoney().fetchData();
+    initializedUserId();
+  }
+
+  Future<void> initializedUserId() async {
+    userId = await getIdFromSharedPreferences();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +48,9 @@ class CashFlowPage extends StatelessWidget {
                   back(context),
                   title(),
                 ],
+              ),
+              SizedBox(
+                height: 20,
               ),
               _buildCashList(),
             ],
@@ -72,27 +101,61 @@ class CashFlowPage extends StatelessWidget {
   }
 
   _buildCashList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.only(top: 20),
-      itemCount: cashList.length,
-      itemBuilder: (context, index) {
-        final cash = cashList[index];
-        return _buildCashListItem(cash);
-      },
+    return Expanded(
+      child: ScrollConfiguration(
+        behavior: NoGlowBehavior(),
+        child: SingleChildScrollView(
+          child: FutureBuilder<List<Transaction>>(
+            future: _fetchTransaction,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return loadingData();
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(child: Text('No transactions available.'));
+              } else {
+                List<Transaction> transactions = snapshot.data!;
+                return ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: transactions.length,
+                  itemBuilder: (context, index) {
+                    final transaction = transactions[index];
+                    return _buildCashListItem(transaction);
+                  },
+                );
+              }
+            },
+          ),
+        ),
+      ),
     );
   }
 
-  _buildCashListItem(Cash cash) {
+  String titleTextLogic(Transaction transaction) {
+    bool isIncrease = transaction.receiverId == userId;
+
+    if (transaction.transactionType == 'topup') {
+      return 'Melakukan Top Up';
+    } else if (transaction.transactionType == 'transfer') {
+      if (isIncrease) {
+        return 'Uang Masuk dari ${transaction.receiverId}';
+      } else {
+        return 'Uang Keluar ke ${transaction.receiverId}';
+      }
+    } else {
+      return 'Melakukan Tarik Tunai';
+    }
+  }
+
+  _buildCashListItem(Transaction transaction) {
+    bool isIncrease = userId == transaction.receiverId;
     final Color containerColor =
-        cash.payOrBuy ? Color(0x19FF2E2E) : Color(0x192EB22B);
-    final Color textColor =
-        cash.payOrBuy ? Color(0xFFFF2E2E) : Color(0xFF2FB22C);
-    final String titleText = cash.payOrBuy
-        ? 'Pembayaran ke ${cash.titleflow}'
-        : 'Uang Masuk dari ${cash.titleflow}';
-    final String rp = cash.payOrBuy ? '-Rp. ' : 'Rp. ';
+        isIncrease ? Color(0x192EB22B) : Color(0x19FF2E2E);
+    final Color textColor = isIncrease ? Color(0xFF2FB22C) : Color(0xFFFF2E2E);
+    final String rp = isIncrease ? 'Rp. ' : '-Rp. ';
     return Column(
       children: [
         Container(
@@ -122,7 +185,7 @@ class CashFlowPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    titleText,
+                    titleTextLogic(transaction),
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 12,
@@ -132,7 +195,7 @@ class CashFlowPage extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '${cash.date}',
+                    formatOrderIdDate(transaction.orderId),
                     style: TextStyle(
                       color: Color(0xFF828993),
                       fontSize: 10,
@@ -162,7 +225,8 @@ class CashFlowPage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${cash.detailCash}',
+                      NumberFormat.decimalPattern('vi_VN')
+                          .format(int.tryParse(transaction.nominal)),
                       style: TextStyle(
                         color: textColor,
                         fontSize: 8,
@@ -182,5 +246,18 @@ class CashFlowPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String formatOrderIdDate(String orderId) {
+    String year = orderId.substring(2, 6);
+    String month = orderId.substring(6, 8);
+    String day = orderId.substring(8, 10);
+
+    DateTime dateTime =
+        DateTime(int.parse(year), int.parse(month), int.parse(day));
+
+    String formattedDate = DateFormat('d MMM y', 'id_ID').format(dateTime);
+
+    return formattedDate;
   }
 }

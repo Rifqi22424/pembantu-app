@@ -31,6 +31,13 @@ class _MyAppState extends State<VideoCall> {
     initAgora();
   }
 
+  @override
+  void dispose() {
+    _engine.leaveChannel();
+    _engine.release();
+    super.dispose();
+  }
+
   Future<void> initAgora() async {
     // retrieve permissions
     await [Permission.microphone, Permission.camera].request();
@@ -82,16 +89,18 @@ class _MyAppState extends State<VideoCall> {
     );
   }
 
-  void toggleMuteCamera() async {
-    _isCameraMuted = !_isCameraMuted;
-    await _engine.muteLocalVideoStream(_isCameraMuted);
-    setState(() {});
+  void toggleMuteCamera() {
+    setState(() async {
+      _isCameraMuted = !_isCameraMuted;
+      await _engine.muteLocalVideoStream(_isCameraMuted);
+    });
   }
 
-  void toggleMic() async {
-    _isMicMuted = !_isMicMuted;
-    await _engine.muteLocalAudioStream(_isMicMuted);
-    setState(() {});
+  void toggleMic() {
+    setState(() async {
+      _isMicMuted = !_isMicMuted;
+      await _engine.muteLocalAudioStream(_isMicMuted);
+    });
   }
 
   void toggleReverseCamera() {
@@ -100,37 +109,6 @@ class _MyAppState extends State<VideoCall> {
     setState(() {});
   }
 
-//   void sendVideoCallNotification() async {
-//   FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-//   // Penerima notifikasi (FID atau token perangkat penerima)
-//   String receiverFID = "receiver_device_firebase_instance_id";
-
-//   // Pesan notifikasi
-//   RemoteNotification notification = const RemoteNotification(
-//     title: 'Video Call',
-//     body: 'Anda memiliki panggilan video masuk.',
-//   );
-
-//   // Data tambahan yang dapat Anda sertakan
-//   // Data tambahan yang dapat Anda sertakan
-// Map<String, dynamic> data = {
-//   'type': 'video_call',
-//   'from': 'pengirim_video_call_id',
-// };
-
-// // Konversi data tambahan ke Map<String, String>
-// Map<String, String> stringData = Map<String, String>.from(data);
-
-// // Kirim notifikasi
-// await messaging.sendMessage(
-//   to: receiverFID,
-//   data: stringData,
-// );
-
-// }
-
-  // Create UI with local view and remote view
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,6 +169,7 @@ class _MyAppState extends State<VideoCall> {
     return GestureDetector(
       onTap: () {
         _engine.leaveChannel();
+        _engine.release();
         Navigator.pop(context);
       },
       child: Image.asset('images/end_call.png', width: 60, height: 60),

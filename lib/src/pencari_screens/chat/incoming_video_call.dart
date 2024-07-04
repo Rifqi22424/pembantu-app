@@ -1,41 +1,67 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:vibration/vibration.dart';
+import 'package:prt/src/database/shared_preferences.dart';
 
-class InconmingVideoCall extends StatefulWidget {
-  const InconmingVideoCall({super.key});
+class IncomingVideoCall extends StatefulWidget {
+  const IncomingVideoCall({Key? key}) : super(key: key);
 
   @override
-  State<InconmingVideoCall> createState() => _InconmingVideoCallState();
+  State<IncomingVideoCall> createState() => _InconmingVideoCallState();
 }
 
-class _InconmingVideoCallState extends State<InconmingVideoCall>
+class _InconmingVideoCallState extends State<IncomingVideoCall>
     with TickerProviderStateMixin {
   late Animation<double> callAnimation;
   late AnimationController callController;
-  double _top = 0.0;
-  double _bottom = 0.0;
+  double _top = 100;
+  double _minTop = 0.0;
+  double _maxTop = 200.0;
+  bool _isDragged = false;
 
   @override
   void initState() {
     super.initState();
 
-    callController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 10),
+    // Memutar dering
+    FlutterRingtonePlayer.play(
+      android: AndroidSounds.ringtone,
+      ios: IosSounds.glass,
+      looping: true,
+      volume: 1.0,
+      asAlarm: false,
     );
 
-    callAnimation = Tween(begin: 0.0, end: 10.0).animate(
+    Vibration.vibrate(pattern: [2000, 2000, 2000, 2000, 2000], repeat: 2);
+
+    callController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    callAnimation = Tween(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: callController, curve: Curves.easeInOut),
     );
 
-    callController.repeat(reverse: true);
+    startAnimation();
   }
 
   @override
   void dispose() {
+    FlutterRingtonePlayer.stop();
+    Vibration.cancel();
     callController.dispose();
     super.dispose();
+  }
+
+  void startAnimation() async {
+    await callController.forward().whenComplete(() {});
+    await callController.reverse().whenComplete(() {});
+    await Future.delayed(Duration(seconds: 2));
+    startAnimation();
   }
 
   @override
@@ -43,7 +69,7 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
     final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      body: Container(
+      body: SizedBox(
         height: screenHeight,
         child: Stack(
           children: [
@@ -71,30 +97,11 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
                     nameCalling(),
                     const SizedBox(height: 12),
                     callStatue(),
-                    Spacer(),
-                    GestureDetector(
-                      onPanUpdate: (details) {
-                        setState(() {
-                          double delta = details.delta.dy;
-                          double maxTop = 0;
-                          double minBottom = MediaQuery.of(context)
-                                  .size
-                                  .height -
-                              60; // 60 adalah tinggi elemen yang ingin digeser
-
-                          // Menghitung posisi atas dan bawah baru
-                          _top = (_top + delta).clamp(
-                              maxTop,
-                              minBottom -
-                                  60); // 60 adalah tinggi elemen yang ingin digeser
-                          _bottom = (_bottom + delta).clamp(maxTop + 60,
-                              minBottom); // 60 adalah tinggi elemen yang ingin digeser
-                        });
-                      },
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Column(
+                    SizedBox(height: 150),
+                    Stack(
+                      children: [
+                        Center(
+                          child: Column(
                             children: [
                               Image.asset(
                                 'images/nav_up_green.png',
@@ -115,7 +122,7 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
                               ),
                               const SizedBox(height: 12),
                               SizedBox(
-                                height: 60,
+                                height: 130,
                                 width: 60,
                               ),
                               const SizedBox(height: 12),
@@ -138,21 +145,82 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
                               ),
                             ],
                           ),
-                          Positioned(
-                            top: _top,
-                            bottom: _bottom,
-                            child: Image.asset(
-                              'images/InterviewGreen.png',
-                              width: 60,
-                              height: 60,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        GestureDetector(
+                            onVerticalDragDown: (details) {
+                              _isDragged = true;
+                            },
+                            onVerticalDragUpdate: (details) async {
+                              final String? token =
+                                  await getVcallTokenFromSharedPreferences();
+                              final String? channel =
+                                  await getVcallNameFromSharedPreferences();
+                              setState(() {
+                                _top += details.primaryDelta! *
+                                    1.5; 
+                                if (_top < _minTop) {
+                                  _top = _minTop;
+                                  Navigator.pushReplacementNamed(
+                                      context, '/videocall',
+                                      arguments: {
+                                        'channel': channel,
+                                        'token': token,
+                                      });
+                                  print('Batas atas');
+                                  FlutterRingtonePlayer.stop();
+                                  Vibration.cancel();
+                                } else if (_top > _maxTop) {
+                                  _top = _maxTop;
+                                  Navigator.pop(context);
+                                  FlutterRingtonePlayer.stop();
+                                  Vibration.cancel();
+                                  print('Batas bawah');
+                                }
+                              });
+                            },
+                            onVerticalDragEnd: (details) {
+                              _isDragged = false;
+                              resetToCenter();
+                            },
+                            child: AnimatedBuilder(
+                              animation: callController,
+                              builder: (context, child) {
+                                if (!_isDragged) {
+                                  return Transform.scale(
+                                    scale: callAnimation.value,
+                                    child: Transform.translate(
+                                      offset: Offset(
+                                        Random().nextBool() ? 0.5 : -0.5,
+                                        0.0,
+                                      ),
+                                      child: AnimatedContainer(
+                                        duration: Duration(milliseconds: 1000),
+                                        alignment: Alignment.center,
+                                        margin: EdgeInsets.only(top: _top),
+                                        child: Image.asset(
+                                          'images/InterviewGreen.png',
+                                          width: 60,
+                                          height: 60,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  // Jika _isDragged == true, kembalikan widget tanpa animasi
+                                  return Container(
+                                    alignment: Alignment.center,
+                                    margin: EdgeInsets.only(top: _top),
+                                    child: Image.asset(
+                                      'images/InterviewGreen.png',
+                                      width: 60,
+                                      height: 60,
+                                    ),
+                                  );
+                                }
+                              },
+                            )),
+                      ],
                     ),
-                    SizedBox(
-                      height: 60,
-                    )
                   ],
                 ),
               ),
@@ -161,6 +229,13 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
         ),
       ),
     );
+  }
+
+  void resetToCenter() {
+    // Kembalikan widget ke posisi tengah dengan animasi
+    setState(() {
+      _top = (_maxTop - _minTop) / 2;
+    });
   }
 
   Text callStatue() {
@@ -219,14 +294,4 @@ class _InconmingVideoCallState extends State<InconmingVideoCall>
               fit: BoxFit.cover)),
     );
   }
-
-  // incomingCallBG() {
-  //   return ImageFiltered(
-  //     imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-  //     child: Image.asset(
-  //       'images/incomingCallBG.png',
-  //       fit: BoxFit.cover,
-  //     ),
-  //   );
-  // }
 }

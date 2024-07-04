@@ -1,21 +1,26 @@
-// ignore_for_file: prefer_const_constructors
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:prt/main.dart';
-import 'package:prt/src/api/auth_model.dart';
 import 'package:prt/src/api/fetch_data.dart';
 import 'package:prt/src/api/fetch_user_data.dart';
+import 'package:prt/src/api/interview_api.dart';
+import 'package:prt/src/api/like_api.dart';
+import 'package:prt/src/models/chat_model.dart';
+import 'package:prt/src/models/chat_user_model.dart';
+import 'package:prt/src/models/date_model.dart';
 import 'package:prt/src/models/time_interview.dart';
 import 'package:prt/src/provider/user_provider.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/limit_text.dart';
+import 'package:prt/src/widgets/loading_user_list.dart';
+import 'package:prt/src/widgets/loading_user_profile.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
+import '../../widgets/overlay_interview.dart';
 
 class DetailProfilePage extends StatefulWidget {
-  final UserProfile user;
-
-  const DetailProfilePage({super.key, required this.user});
+  final int id;
+  const DetailProfilePage({super.key, required this.id});
 
   @override
   State<DetailProfilePage> createState() => _DetailProfilePageState();
@@ -23,35 +28,62 @@ class DetailProfilePage extends StatefulWidget {
 
 class _DetailProfilePageState extends State<DetailProfilePage> {
   bool isSelengkapnyaPressed = false;
-
+  late OverlayEntry overlayEntry;
   final UserProvider userProvider = UserProvider();
   bool isInterviewButtonPressed = false;
   bool isCostumButtonPressed = false;
+  bool isScheduleSuccess = false;
   List<InterviewFree> interviewDates = generateInterviewFreeList();
+  InterviewFree? selectedInterviewDates;
   int selectedIndex = -1;
   int index = 0;
+  ScrollController _scrollController = ScrollController();
+  LikeApi likeApi = LikeApi();
 
   String alamat = '';
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   final List<String> time = ['9:00', '10:00', '12:00', '20.00'];
   int selectedTimeIndex = -1;
+  String? selectedTimeInterview;
 
-  VideoCall videocall = VideoCall();
-  late String? channelName = ''; 
-  late String? token = ''; 
-
+  late String? channelName = '';
+  late String? token = '';
+  Future<List<UserProfile>> _userProfileFuture = fetchDBFirst();
+  UserProfile? userProfile;
   late FetchData fetchData;
   late String authToken;
   late String id;
+  InterviewApi interviewApi = InterviewApi();
 
   @override
   void initState() {
     super.initState();
-    authToken = '1|wLQRRxEnI5e4U6LMb6dUn49LJovzoUwKy8rUq9lh66972726';
     id = '1';
-    fetchData = FetchData(authToken, id);
-    videocall;
+    fetchData = FetchData(id);
+    fetchDetailProfile(widget.id).then((profile) {
+      setState(() {
+        userProfile = profile;
+      });
+    });
+  }
+
+  void showOverlay(BuildContext context) {
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return MyOverlayWidget(overlayEntry: overlayEntry);
+      },
+      maintainState: true,
+      opaque: true,
+    );
+
+    Navigator.of(context).overlay!.insert(overlayEntry);
+  }
+
+  Future<void> refresh() async {
+    setState(() {
+      _userProfileFuture = fetchDBFirst();
+    });
   }
 
   @override
@@ -61,83 +93,116 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
-      body: Center(
-        child: SizedBox(
-          width: deviceTypeTablet() ? 400 : screenWidth,
-          child: Stack(
-            children: [
-              ScrollConfiguration(
-                behavior: NoGlowBehavior(),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Stack(
-                        children: [
-                          photoBackground(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              back(context),
-                              title(),
-                              like(context),
-                            ],
+      body: userProfile == null
+          ? loadingUserProfile()
+          : RefreshIndicator(
+              onRefresh: refresh,
+              color: Color(0xFF39810D),
+              child: SizedBox(
+                width: deviceTypeTablet() ? 400 : screenWidth,
+                child: Stack(
+                  children: [
+                    Opacity(
+                      opacity: isInterviewButtonPressed ||
+                              isCostumButtonPressed ||
+                              isScheduleSuccess
+                          ? 0.5
+                          : 1.0,
+                      child: AbsorbPointer(
+                        absorbing: isInterviewButtonPressed ||
+                                isCostumButtonPressed ||
+                                isScheduleSuccess
+                            ? true
+                            : false,
+                        child: ScrollConfiguration(
+                          behavior: NoGlowBehavior(),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Stack(
+                                  children: [
+                                    photoBackground(),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        back(context),
+                                        title(),
+                                        like(context),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  margin: EdgeInsets.only(
+                                      left: 24, right: 24, top: 16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      nameNType(),
+                                      SizedBox(height: 16),
+                                      ratingNInfo(),
+                                      SizedBox(height: 16),
+                                      description(),
+                                      selengkapnyaContent(),
+                                      isSelengkapnyaPressed
+                                          ? SizedBox(height: 10)
+                                          : SizedBox(height: 20),
+                                      price(),
+                                      SizedBox(height: 20),
+                                      messageNInterview(),
+                                      SizedBox(height: 30),
+                                      terkaitText(),
+                                    ],
+                                  ),
+                                ),
+                                _buildUserList(),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(left: 24, right: 24, top: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            nameNType(),
-                            SizedBox(height: 16),
-                            ratingNInfo(),
-                            SizedBox(height: 16),
-                            description(),
-                            selengkapnyaContent(),
-                            isSelengkapnyaPressed
-                                ? SizedBox(height: 10)
-                                : SizedBox(height: 20),
-                            price(),
-                            SizedBox(height: 20),
-                            messageNInterview(),
-                            SizedBox(height: 30),
-                            terkaitText(),
-                          ],
                         ),
                       ),
-                      _buildUserList(),
-                    ],
-                  ),
+                    ),
+                    Visibility(
+                      visible: isInterviewButtonPressed,
+                      child: overlayInterviewSchedule(index),
+                    ),
+                    Visibility(
+                      visible: isCostumButtonPressed,
+                      child: overlayCostumSchedule(),
+                    ),
+                    Visibility(
+                      visible: isScheduleSuccess,
+                      child: overlayScheduleSuccess(index),
+                    ),
+                  ],
                 ),
               ),
-              if (isInterviewButtonPressed) overlayInterviewSchedule(index),
-              if (isCostumButtonPressed) overlayCostumSchedule()
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: floatingButton(),
-      bottomNavigationBar: botBar(context),
+            ),
+      // floatingActionButton: floatingButton(),
+      // bottomNavigationBar: botBar(context),
     );
   }
 
   selengkapnyaContent() {
-    List<String> skills = widget.user.profile['skill']
+    List<String> skills = userProfile!.profile['skill']
         .map<String>((skill) => skill['name'].toString())
         .toList();
 
     return AnimatedContainer(
       duration: Duration(milliseconds: 500),
-      height: isSelengkapnyaPressed ? 230 : 0,
-      child: IgnorePointer(
-        ignoring: true,
+      height: isSelengkapnyaPressed ? 190 : 0,
+      child: Scrollbar(
+        controller: _scrollController,
         child: ListView(
+          controller: _scrollController,
           padding: EdgeInsets.zero,
           children: [
             Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 8),
@@ -153,7 +218,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  widget.user.profile["alamat_sekarang"],
+                  userProfile!.profile["alamat_sekarang"],
                   style: TextStyle(
                     color: Color(0xFF828993),
                     fontSize: 10,
@@ -174,7 +239,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  widget.user.profile["agama"],
+                  userProfile!.profile["agama"],
                   style: TextStyle(
                     color: Color(0xFF828993),
                     fontSize: 10,
@@ -238,39 +303,68 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
+            margin: EdgeInsets.only(left: 6),
             width: 40,
             height: 40,
             padding: EdgeInsets.all(4),
             clipBehavior: Clip.antiAlias,
-            decoration: ShapeDecoration(
-              shape: RoundedRectangleBorder(
-                side: BorderSide(
-                  width: 0.50,
-                  strokeAlign: BorderSide.strokeAlignCenter,
-                  color: Color(0xFFECECEC),
-                ),
-                borderRadius: BorderRadius.circular(32),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(
+                width: 0.50,
+                color: Color(0xFFECECEC),
               ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.grey,
+                  offset: Offset(0, 1),
+                  blurRadius: 2.0,
+                  spreadRadius: 0.0,
+                ),
+              ],
             ),
             child: GestureDetector(
               onTap: () async {
-                try {
-                  final data = await fetchData.createTokenVideocall();
-                  setState(() {
-                    channelName = data['Name'];
-                    token = data['Token'];
-                  });
-                } catch (e) {
-                  print(e);
-                }
-                Navigator.pushNamed(context, '/videocall', arguments: {
-                  'channel': "WfCp7xTmj5Yt5sR4AyVwUeLrCzOpgv",
-                  'token': "007eJxTYJCesMVYZZmOv8e0J1uuTj++9JwwP9vr1efzf77l43W24J+owGBoYZJimZRmmmRpbGlilGZgYZxqmWJuaZZqam6UamCeLG5nlirAx8Bw9M9hBkYgZAFiEJ8JTDKDSRYwKccQnuZcYF4RkptlGlliWhxk4lgZVh6a6lPkXOVfkF7GyGAAAJgbJwY=",
+                // try {
+                //   final data = await fetchData.createTokenVideocall();
+                //   setState(() {
+                //     channelName = data['Name'];
+                //     token = data['Token'];
+                //   });
+                // } catch (e) {
+                //   print(e);
+                // }
+                // try {
+                //   bool sendNotif = await FirebaseNotifAPI().sendNotification(
+                //       userProfile!.devicetoken, "User", channelName!, token!);
+                //   if (sendNotif) {
+                //     print('Notif telah dikirim');
+                //     Navigator.pushNamed(context, '/videocall', arguments: {
+                //       'channel': channelName,
+                //       'token': token,
+                //     });
+                //   }
+                // } catch (e) {
+                //   print('Notif gagal dikirim');
+                // }
+
+                Navigator.pushNamed(context, '/chatReal', arguments: {
+                  'isRealUser': true,
+                  'profile': userProfile,
+                  'user': Chat(
+                    imageUrl: 'images/John.jpg',
+                    sender: johnDoe,
+                    lastMessage: 'Hello, how are you?',
+                    time: '10:30 AM',
+                    unRead: '2',
+                  )
                 });
               },
               child: Center(
                 child: Image.asset(
-                  'images/InterviewGreen.png',
+                  // 'images/InterviewGreen.png',
+                  'images/MessageGreen.png',
                 ),
               ),
             ),
@@ -282,6 +376,9 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   price() {
+    final gaji = userProfile!.profile["gaji"];
+    final formattedGaji = NumberFormat.decimalPattern('vi_VN').format(gaji);
+
     return Row(
       children: [
         Text(
@@ -294,10 +391,19 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           ),
         ),
         Text(
-          widget.user.profile["gaji"].toString(),
+          '$formattedGaji',
           style: TextStyle(
             color: Color(0xFF080C11),
             fontSize: 16,
+            fontFamily: 'Asap',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          ' / permonth',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
             fontFamily: 'Asap',
             fontWeight: FontWeight.w600,
           ),
@@ -311,7 +417,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
       TextSpan(
         children: [
           TextSpan(
-            text: widget.user.profile["deskripsi"],
+            text: userProfile!.profile["deskripsi"],
             style: TextStyle(
               color: Color(0xFF828993),
               fontSize: 10,
@@ -344,40 +450,73 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   void _toggleUserLikedStatus(UserProfile user) {
-    final newIsLiked = !user.isLiked;
-    final userProvider = UserProvider(); // Create an instance
-    userProvider.updateUserLikedStatus(
-        user.profile["id"], newIsLiked); // Call the method on the instance
+    user.isLiked = !user.isLiked;
+    try {
+      likeApi.likeUser(user.id);
+    } catch (e) {
+      print(e);
+    }
+
+    setState(() {});
+  }
+
+  maintanance() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 100,
+        ),
+        Text("Sedang dalam maintanance"),
+      ],
+    );
+  }
+
+  dataIsEmpty() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 100,
+        ),
+        Text("Tidak ada data"),
+      ],
+    );
   }
 
   Widget _buildUserList() {
     return FutureBuilder<List<UserProfile?>>(
-      future: fetchUserProfiles(), // Panggil fungsi fetchUserProfiles
+      future: _userProfileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return loadingUserList();
         } else if (snapshot.hasError) {
-          return Text('Terjadi kesalahan: ${snapshot.error}');
+          return maintanance();
         } else {
           final userProfiles = snapshot.data ?? [];
+          final filteredUserProfiles = userProfiles
+              .where((user) => user!.email != userProfile!.email)
+              .toList();
 
           return ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
             padding: EdgeInsets.only(top: 6),
-            itemCount: userProfiles.length,
+            itemCount: filteredUserProfiles.length,
             itemBuilder: (context, index) {
-              final user = userProfiles[index];
-              if (user == widget.user) {
-                return Container();
-              } else {
-                return _buildUserListItem(user!);
-              }
+              final user = filteredUserProfiles[index];
+              return _buildUserListItem(user!);
             },
           );
         }
       },
     );
+  }
+
+  String rattingNull(UserProfile user) {
+    if (user.profile["rating"] == null) {
+      return "0";
+    } else {
+      return user.profile["rating"];
+    }
   }
 
   _buildUserListItem(UserProfile user) {
@@ -386,12 +525,13 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
       children: [
         GestureDetector(
           onTap: () {
-            Navigator.pushNamed(context, '/detailprofile', arguments: user);
+            Navigator.pushNamed(context, '/detailprofile', arguments: user.id);
           },
           child: Container(
             margin: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             padding: EdgeInsets.all(10),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   width: 150,
@@ -485,7 +625,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                                 ),
                                 SizedBox(width: 2),
                                 Text(
-                                  user.profile["rating"],
+                                  ratingNull(),
                                   style: TextStyle(
                                     color: Color(0xFF080C11),
                                     fontSize: 8,
@@ -550,15 +690,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                         ),
                       ),
                       SizedBox(height: 0.1),
-                      Text(
-                        'Rp. ${user.profile["gaji"]}',
-                        style: TextStyle(
-                          color: Color(0xFF080C11),
-                          fontSize: 11,
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
+                      userPrices(user)
                     ],
                   ),
                 ),
@@ -574,6 +706,21 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Text userPrices(UserProfile user) {
+    final gaji = user.profile["gaji"];
+    final formattedGaji = NumberFormat.decimalPattern('vi_VN').format(gaji);
+
+    return Text(
+      'Rp. $formattedGaji',
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 11,
+        fontFamily: 'Inter',
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 
@@ -600,22 +747,38 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               onPressed: () {
                 Navigator.pushNamed(context, '/home');
               },
-              icon: Image.asset('images/Home.png')),
+              icon: Image.asset(
+                'images/HomePlain.png',
+                width: 28,
+                height: 28,
+              )),
           IconButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/transaction');
               },
-              icon: Image.asset('images/Dolar.png')),
+              icon: Image.asset(
+                'images/Dolar.png',
+                width: 28,
+                height: 28,
+              )),
           IconButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/listchat');
               },
-              icon: Image.asset('images/Message.png')),
+              icon: Image.asset(
+                'images/Message.png',
+                width: 28,
+                height: 28,
+              )),
           IconButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/profile');
               },
-              icon: Image.asset('images/User.png')),
+              icon: Image.asset(
+                'images/User.png',
+                width: 28,
+                height: 28,
+              )),
         ],
       ),
     );
@@ -624,16 +787,17 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   interviewButton() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: MaterialStateProperty.all<Size>(Size(180, 50)),
+        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(180, 50)),
       ),
       onPressed: () {
         setState(() {
+          // showOverlay(context);
           isInterviewButtonPressed = true;
         });
       },
@@ -647,6 +811,14 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
         ),
       ),
     );
+  }
+
+  String ratingNull() {
+    if (userProfile!.profile["rating"] == null) {
+      return "0";
+    } else {
+      return userProfile!.profile["rating"];
+    }
   }
 
   Container ratingNInfo() {
@@ -665,7 +837,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               ),
               SizedBox(width: 4),
               Text(
-                widget.user.profile["rating"],
+                ratingNull(),
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 10,
@@ -684,7 +856,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               ),
               SizedBox(width: 2),
               Text(
-                '${widget.user.profile["usia"]} thn',
+                '${userProfile!.profile["usia"]} thn',
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 10,
@@ -703,7 +875,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               ),
               SizedBox(width: 4),
               Text(
-                '${widget.user.profile["lama_pengalaman_bekerja"]} thn',
+                '${userProfile!.profile["lama_pengalaman_bekerja"]} thn',
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 10,
@@ -725,7 +897,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            widget.user.profile["nama_lengkap"],
+            userProfile!.profile["nama_lengkap"],
             style: TextStyle(
               color: Color(0xFF080C11),
               fontSize: 18,
@@ -743,7 +915,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
             child: Stack(
               children: [
                 Text(
-                  widget.user.category["name"],
+                  userProfile!.category["name"],
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 8,
@@ -761,17 +933,33 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   photoBackground() {
-    return SizedBox(
-      height: 355,
-      width: double.maxFinite,
-      child: ClipRRect(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-        child: Image.network(
-          "$serverPath${widget.user.profile["foto_setengah_badan"]}",
-          fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          setState(() {
+            userProfile!.isLiked = !userProfile!.isLiked;
+            try {
+              likeApi.likeUser(userProfile!.id);
+            } catch (e) {
+              print(e);
+            }
+
+            setState(() {});
+          });
+        });
+      },
+      child: SizedBox(
+        height: 355,
+        width: double.maxFinite,
+        child: ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(32),
+            bottomRight: Radius.circular(32),
+          ),
+          child: Image.network(
+            "$serverPath${userProfile!.profile["foto_setengah_badan"]}",
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
@@ -822,12 +1010,25 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   like(context) {
+    final Color loveColor =
+        userProfile!.isLiked ? Color(0xFFFF0E0E) : Colors.white;
     return Padding(
       padding: const EdgeInsets.only(top: 60, right: 24),
       child: Align(
         alignment: Alignment.topRight,
         child: GestureDetector(
-          onTap: () {},
+          onTap: () {
+            setState(() {
+              userProfile!.isLiked = !userProfile!.isLiked;
+              try {
+                likeApi.likeUser(userProfile!.id);
+              } catch (e) {
+                print(e);
+              }
+
+              setState(() {});
+            });
+          },
           child: Container(
             width: 30,
             height: 30,
@@ -843,7 +1044,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
               'images/WhiteLove.png',
               width: 10,
               height: 10,
-              color: Colors.white,
+              color: loveColor,
             ),
           ),
         ),
@@ -856,10 +1057,18 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
       child: Container(
         width: 350,
         clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32))),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.grey,
+              offset: Offset(0, 2),
+              blurRadius: 5.0,
+              spreadRadius: 0.0,
+            ),
+          ],
+        ),
         child: IntrinsicHeight(
           child: Container(
             padding: EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 24),
@@ -893,22 +1102,30 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   }
 
   deleteButton() {
-    return Align(
-        alignment: Alignment.topRight,
-        child: Image.asset('images/xNoBG.png', width: 16, height: 16));
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isInterviewButtonPressed = false;
+          isCostumButtonPressed = false;
+          isScheduleSuccess = false;
+        });
+      },
+      child: Align(
+          alignment: Alignment.topRight,
+          child: Image.asset('images/xNoBG.png', width: 16, height: 16)),
+    );
   }
 
   submitCostum() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
-        minimumSize:
-            MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
       ),
       onPressed: () {
         setState(() {
@@ -928,19 +1145,99 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
+  overlayScheduleSuccess(index) {
+    return Center(
+      child: Container(
+        width: 350,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.grey,
+              offset: Offset(0, 2),
+              blurRadius: 5.0,
+              spreadRadius: 0.0,
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Container(
+            padding: EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                deleteButton(),
+                Image.asset('images/check.png', width: 70, height: 70),
+                SizedBox(height: 22),
+                const Text(
+                  textAlign: TextAlign.center,
+                  'Berhasil melakukan Schedule',
+                  style: TextStyle(
+                    color: Color(0xFF080C11),
+                    fontSize: 18,
+                    fontFamily: 'Asap',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 22),
+                const Text(
+                  'Kami akan mengirimkan notifikasi pada kedua belah pihak untuk melakukan Interview pada waktu yang telah ditentukan',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF828993),
+                    fontSize: 12,
+                    fontFamily: 'Asap',
+                    fontWeight: FontWeight.w400,
+                    height: 1.71,
+                  ),
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleInterviewButtonPressed() async {
+    bool createSchedule = await interviewApi.createCalendarSchedule(
+      userProfile!.id,
+      selectedInterviewDates!,
+      selectedTimeInterview!,
+    );
+    if (createSchedule) {
+      setState(() {
+        isInterviewButtonPressed = false;
+        isScheduleSuccess = true;
+      });
+    } else {
+      print('Error');
+    }
+  }
+
   submitSchedule() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize:
-            MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
       ),
-      onPressed: () {},
+      onPressed: () {
+        if (selectedIndex != -1 && selectedTimeIndex != -1) {
+          setState(() {
+            isInterviewButtonPressed = false;
+          });
+          _handleInterviewButtonPressed();
+        }
+      },
       child: Text(
         'Schedule',
         style: TextStyle(
@@ -960,12 +1257,15 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
         physics: BouncingScrollPhysics(),
         padding: EdgeInsets.only(left: 16),
         scrollDirection: Axis.horizontal,
+        shrinkWrap: true,
         itemCount: time.length,
         itemBuilder: (BuildContext context, int index) {
           return GestureDetector(
             onTap: () {
               setState(() {
                 selectedTimeIndex = index;
+                selectedTimeInterview = time[index];
+                print(selectedTimeInterview);
               });
             },
             child: Container(
@@ -1014,16 +1314,18 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
 
   listDates() {
     return SizedBox(
-      height: 90,
+      height: 80,
       child: ListView.builder(
         physics: BouncingScrollPhysics(),
         scrollDirection: Axis.horizontal,
+        shrinkWrap: true,
         itemCount: interviewDates.length,
         itemBuilder: (context, index) {
           final interviewDate = interviewDates[index];
           return GestureDetector(
             onTap: () {
               setState(() {
+                selectedInterviewDates = interviewDates[index];
                 selectedIndex = index;
               });
             },
@@ -1124,10 +1426,17 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
     return Center(
       child: Container(
         clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.grey,
+              offset: Offset(0, 2),
+              blurRadius: 5.0,
+              spreadRadius: 0.0,
+            ),
+          ],
         ),
         child: IntrinsicHeight(
           child: Container(
@@ -1143,7 +1452,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
                 SizedBox(height: 12),
                 descText(),
                 SizedBox(height: 32),
-                _alamat(),
+                scheduleName(),
                 SizedBox(height: 16),
                 _timePickerButton(),
                 SizedBox(height: 16),
@@ -1160,10 +1469,18 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  Align deleteLayout() {
-    return Align(
-      alignment: Alignment.topRight,
-      child: Image.asset('images/xNoBG.png', width: 16, height: 16),
+  deleteLayout() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isInterviewButtonPressed = false;
+          isCostumButtonPressed = false;
+        });
+      },
+      child: Align(
+        alignment: Alignment.topRight,
+        child: Image.asset('images/xNoBG.png', width: 16, height: 16),
+      ),
     );
   }
 
@@ -1196,16 +1513,24 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
   submitScheduleCostum() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize:
-            MaterialStateProperty.all<Size>(Size(double.maxFinite, 80)),
+        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 80)),
       ),
-      onPressed: () {},
+      onPressed: () {
+        if (selectedDate != null && selectedTime != null) {
+          _handleInterviewCostumButtonPressed();
+          isScheduleSuccess = true;
+          isInterviewButtonPressed = false;
+        }
+        setState(() {
+          isCostumButtonPressed = false;
+        });
+      },
       child: Text(
         'Schedule',
         style: TextStyle(
@@ -1218,7 +1543,26 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
     );
   }
 
-  _alamat() {
+  void _handleInterviewCostumButtonPressed() async {
+    Date date = Date(
+        minute: selectedTime!.minute,
+        hour: selectedTime!.hour,
+        day: selectedDate!.day,
+        month: selectedDate!.month,
+        year: selectedDate!.year);
+
+    bool createCostumSchedule =
+        await interviewApi.createCostumCalendarSchedule(userProfile!.id, date);
+    if (createCostumSchedule) {
+      setState(() {
+        isInterviewButtonPressed = false;
+      });
+    } else {
+      print('Error');
+    }
+  }
+
+  scheduleName() {
     return Container(
       height: 54,
       decoration: BoxDecoration(
@@ -1247,7 +1591,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           height: 1.4,
         ),
         onSaved: (String? value) {
-          alamat = value!;
+          value = value!;
         },
       ),
     );

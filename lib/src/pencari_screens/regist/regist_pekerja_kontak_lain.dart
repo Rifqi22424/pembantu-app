@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dash/flutter_dash.dart';
 import 'package:prt/src/api/regist_pekerja_model.dart';
+import 'package:prt/src/mixins/validation_mixin.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
 
@@ -14,7 +15,8 @@ class RegistPekerjaKontakLain extends StatefulWidget {
       _RegistPekerjaKontakLainState();
 }
 
-class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
+class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain>
+    with ValidationMixin {
   final formKey = GlobalKey<FormState>();
   bool isPasswordVisible = false;
 
@@ -26,6 +28,7 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
   late String authToken;
   late String id;
   late RegistPekerjaModel pekerjaRegist;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -68,13 +71,13 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
                               ListView(
                                 shrinkWrap: true,
                                 children: [
-                                  _NamaLengkap(),
+                                  _namaLengkap(),
                                   SizedBox(height: 12),
-                                  _AlamatKTP(),
+                                  _alamatKTP(),
                                   SizedBox(height: 12),
-                                  _NoTelp(),
+                                  _noTelp(),
                                   SizedBox(height: 12),
-                                  _Alamat(),
+                                  _alamat(),
                                 ],
                               ),
                               Spacer(),
@@ -250,144 +253,136 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
     );
   }
 
-  Widget _NamaLengkap() {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+  Widget _namaLengkap() {
+    return TextFormField(
+      validator: validateName,
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
+        height: 1.4,
       ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
+      decoration: InputDecoration(
+        labelText: 'Nama Lengkap',
+        border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.blue, // Warna border
+              width: 2.0, // Lebar border
+            ),
+            borderRadius: BorderRadius.circular(32)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        labelStyle: TextStyle(
+          color: Color(0xFF828993),
           fontSize: 12,
           fontFamily: 'Asap',
           fontWeight: FontWeight.w400,
           height: 1.71,
         ),
-        decoration: InputDecoration(
-          hintText: 'Nama Lengkap',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          namalengkap = value!;
-        },
       ),
+      onSaved: (String? value) {
+        namalengkap = value!;
+      },
     );
   }
 
-  Widget _AlamatKTP() {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+  Widget _alamatKTP() {
+    return TextFormField(
+      validator: validateAlamat,
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
+        height: 1.4,
       ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
+      decoration: InputDecoration(
+        labelText: 'Alamat KTP',
+        border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.blue, // Warna border
+              width: 2.0, // Lebar border
+            ),
+            borderRadius: BorderRadius.circular(32)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        labelStyle: TextStyle(
+          color: Color(0xFF828993),
           fontSize: 12,
           fontFamily: 'Asap',
           fontWeight: FontWeight.w400,
-          height: 1.71,
+          height: 1.7,
         ),
-        decoration: InputDecoration(
-          hintText: 'Alamat KTP',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          alamatktp = value!;
-        },
       ),
+      onSaved: (String? value) {
+        alamatktp = value!;
+      },
     );
   }
 
-  Widget _NoTelp() {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+  Widget _noTelp() {
+    return TextFormField(
+      validator: validatePhone,
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
+        height: 1.4,
       ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: 'No. Telp',
+        border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.blue, // Warna border
+              width: 2.0, // Lebar border
+            ),
+            borderRadius: BorderRadius.circular(32)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        labelStyle: TextStyle(
+          color: Color(0xFF828993),
           fontSize: 12,
           fontFamily: 'Asap',
           fontWeight: FontWeight.w400,
-          height: 1.71,
+          height: 1.7,
         ),
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          hintText: 'No. Telp',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          notelp = value!;
-        },
       ),
+      onSaved: (String? value) {
+        notelp = value!;
+      },
     );
   }
 
-  Widget _Alamat() {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+  Widget _alamat() {
+    return TextFormField(
+      validator: validateAlamat,
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
+        height: 1.4,
       ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
+      decoration: InputDecoration(
+        labelText: 'Alamat Sekarang',
+        border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.blue, // Warna border
+              width: 2.0, // Lebar border
+            ),
+            borderRadius: BorderRadius.circular(32)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        labelStyle: TextStyle(
+          color: Color(0xFF828993),
           fontSize: 12,
           fontFamily: 'Asap',
           fontWeight: FontWeight.w400,
-          height: 1.71,
+          height: 1.7,
         ),
-        decoration: InputDecoration(
-          hintText: 'Alamat Sekarang',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          alamat = value!;
-        },
       ),
+      onSaved: (String? value) {
+        alamat = value!;
+      },
     );
   }
 
@@ -396,20 +391,28 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: ElevatedButton(
         style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
           ),
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
-              MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
         ),
         onPressed: () async {
-          if (formKey.currentState!.validate()) {
-            formKey.currentState!.save();
-
+          formKey.currentState!.validate();
+          formKey.currentState!.save();
+          if (namalengkap == '' ||
+              alamatktp == '' ||
+              notelp == '' ||
+              alamat == '') {
+            _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
+          } else {
             try {
+              setState(() {
+                isLoading = true;
+              });
               bool success = await pekerjaRegist.registerFourthPage(
                 namalengkap,
                 alamatktp,
@@ -418,22 +421,74 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain> {
               );
               if (success) {
                 Navigator.pushNamed(context, '/registpekerjapengalaman');
+                _showTopSnackbar(context, "Data telah tersimpan", true);
+
+                setState(() {
+                  isLoading = false;
+                });
               }
             } catch (e) {
               print('Error $e');
+              _showTopSnackbar(
+                  context, e.toString().replaceFirst('Exception: ', ''), false);
+              setState(() {
+                isLoading = false;
+              });
             }
           }
         },
-        child: Text(
-          'Selanjutnya',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                'Selanjutnya',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontFamily: 'Asap',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
+  }
+
+  void _showTopSnackbar(BuildContext context, String label, bool isTrueColor) {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 0,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            color: isTrueColor ? Color(0xFF39810D) : Color(0xFFFF2222),
+            child: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    label,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlayState.insert(overlayEntry);
+
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
 }

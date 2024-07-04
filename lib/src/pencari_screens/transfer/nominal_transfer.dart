@@ -2,60 +2,86 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:prt/src/mixins/thousand_formatter.dart';
 import 'package:prt/src/models/chat_user_model.dart';
-import 'package:prt/src/pencari_screens/regist/regist_pekerja_pengalaman.dart';
-import 'package:prt/src/pencari_screens/transfer/confirm_pin_page.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
+
+import '../../api/digital_money.dart';
 
 class NominalTransferPage extends StatefulWidget {
   final CUser user;
+  final String tranferTarget;
 
-  const NominalTransferPage({super.key, required this.user});
+  const NominalTransferPage(
+      {super.key, required this.user, required this.tranferTarget});
 
   @override
   State<NominalTransferPage> createState() => _NominalTransferPageState();
 }
 
 class _NominalTransferPageState extends State<NominalTransferPage> {
-  String selectedPrice = '';
+  int? selectedPrice;
   bool isOverlayVisible = false;
-  List<String> prices = [
-    '100.000',
-    '500.000',
-    '1.000.000',
-    '1.500.000',
-    '3.000.000',
-    '3.500.000',
-    '4.000.000',
-    '4.500.000',
-    '5.000.000',
+  final DigitalMoney digitalMoney = DigitalMoney();
+  List<int> prices = [
+    100000,
+    500000,
+    1000000,
+    1500000,
+    3000000,
+    3500000,
+    4000000,
+    4500000,
+    5000000,
   ];
+  int? saldoFuture;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOwnSaldo().then((saldo) {
+      setState(() {
+        saldoFuture = saldo;
+      });
+    });
+  }
+
   List<bool> containerStates = List.generate(9, (index) => false);
+  TextEditingController topUpController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: Container(
           width: deviceTypeTablet() ? 340 : screenWidth,
           child: Stack(
             children: [
-              Column(
-                children: [
-                  Stack(
+              Opacity(
+                opacity: isOverlayVisible ? 0.5 : 1.0,
+                child: AbsorbPointer(
+                  absorbing: isOverlayVisible ? true : false,
+                  child: Column(
                     children: [
-                      title(),
-                      back(context),
+                      Stack(
+                        children: [
+                          title(),
+                          back(context),
+                        ],
+                      ),
+                      topUpBox(),
+                      saldoAnda(),
+                      InformationText(),
+                      Spacer(),
+                      transferButton(),
                     ],
                   ),
-                  topUpBox(),
-                  saldoAnda(),
-                  InformationText(),
-                  Spacer(),
-                  transferButton(),
-                ],
+                ),
               ),
               if (isOverlayVisible) transferOverlay(context),
             ],
@@ -66,6 +92,10 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
   }
 
   saldoAnda() {
+    final formattedSaldo = saldoFuture != null
+        ? NumberFormat.decimalPattern('vi_VN').format(saldoFuture).toString()
+        : '';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
@@ -92,7 +122,7 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
             ),
             SizedBox(height: 8),
             Text(
-              'Rp. 10.000.000',
+              "Rp. $formattedSaldo",
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 18,
@@ -153,11 +183,6 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
     return Padding(
       padding: const EdgeInsets.only(top: 38, left: 24, right: 24),
       child: Container(
-        // decoration: BoxDecoration(
-        //   image: DecorationImage(
-        //       image: AssetImage('images/TopUpBG.png'), fit: BoxFit.cover),
-        //   borderRadius: BorderRadius.circular(16),
-        // ),
         padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -191,7 +216,13 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
                 SizedBox(
                   width: 150,
                   child: TextField(
-                    controller: TextEditingController(text: selectedPrice),
+                    controller: selectedPrice != null
+                        ? TextEditingController(
+                            text: NumberFormat.decimalPattern('vi_VN')
+                                .format(selectedPrice)
+                                .toString())
+                        : topUpController,
+                    readOnly: true,
                     decoration: InputDecoration(
                       hintText: 'Isi Nominal',
                       border: InputBorder.none,
@@ -205,9 +236,16 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
                     keyboardType: TextInputType.number,
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.digitsOnly,
-                      ThousandsFormatter()
+                      NumberTextInputFormatter()
                     ],
+                    onChanged: (String? value) {
+                      if (value != null && value.isNotEmpty) {
+                        selectedPrice =
+                            int.tryParse(value.replaceAll('.', '')) ?? 0;
+                      }
+                    },
                     enabled: !isOverlayVisible,
+                    autofocus: true,
                   ),
                 ),
               ],
@@ -245,29 +283,94 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
       padding: const EdgeInsets.only(bottom: 24.0),
       child: ElevatedButton(
         style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
           ),
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-          minimumSize: MaterialStateProperty.all<Size>(Size(320, 44)),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+          minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
         ),
-        onPressed: () {
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) => ConfirmPinPage()));
+        onPressed: () async {
+          print(selectedPrice);
+          if (selectedPrice == null) {
+            _showTopSnackbar(context, 'Isi nominal top up!');
+          } else if (selectedPrice! < 50000) {
+            _showTopSnackbar(context, 'Minimal Transfer Rp. 50.000');
+          } else {
+            try {
+              setState(() {
+                isLoading = true;
+              });
+              bool success = await digitalMoney.transfer(selectedPrice!, 1, 1);
+              if (success) {
+                Navigator.pushNamed(context, '/struktransfer');
+                setState(() {
+                  isLoading = false;
+                });
+              }
+            } catch (e) {
+              _showTopSnackbar(
+                  context, e.toString().replaceFirst('Exception: ', ''));
+              setState(() {
+                isLoading = false;
+              });
+            }
+          }
         },
-        child: Text(
-          'Transfer',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                'Transfer',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
+  }
+
+  void _showTopSnackbar(BuildContext context, String text) {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 0,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            color: Color(0xFFFF2222), // Warna latar belakang
+            child: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    text,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlayState.insert(overlayEntry);
+
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
 
   Padding InformationText() {
@@ -295,7 +398,7 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
             ),
             SizedBox(height: 12),
             Text(
-              'Ana Blacklight',
+              widget.tranferTarget,
               style: TextStyle(
                 color: Color(0xFF080C11),
                 fontSize: 13,
@@ -428,7 +531,8 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
                             ),
                           ),
                           Text(
-                            prices[index],
+                            NumberFormat.decimalPattern('vi_VN')
+                                .format(prices[index]),
                             style: TextStyle(
                               color: containerStates[index]
                                   ? Color(0xFF38800C)
@@ -500,7 +604,7 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
-            primary: Color(0xFF38800C),
+            backgroundColor: Color(0xFF38800C),
             minimumSize: Size(300, 50),
           ),
         ),

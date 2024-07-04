@@ -1,11 +1,15 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:prt/src/models/cash_flow_model.dart';
-import 'package:prt/src/models/chat_model.dart';
+import 'package:intl/intl.dart';
+import 'package:prt/src/api/digital_money.dart';
 import 'package:prt/src/models/chat_user_model.dart';
+import 'package:prt/src/models/transaction_model.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/limit_text.dart';
+import '../database/shared_preferences.dart';
+import '../widgets/loading_history.dart';
+import '../widgets/scroll_behavior.dart';
 
 class TransactionPage extends StatefulWidget {
   const TransactionPage({super.key});
@@ -15,61 +19,90 @@ class TransactionPage extends StatefulWidget {
 }
 
 class _TransactionPageState extends State<TransactionPage> {
+  int? userId;
   bool isAmountVisible = true;
+  bool maintenance = false;
+  final DigitalMoney digitalMoney = DigitalMoney();
+  late Future<List<Transaction>> _fetchTransaction;
+
+  String selectedUser = '';
+  CUser? selectedIndex;
+  int? saldoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTransaction = DigitalMoney().fetchData();
+    initializeUserId();
+    fetchOwnSaldo().then((saldo) {
+      setState(() {
+        saldoFuture = saldo;
+      });
+    });
+  }
+
+  Future<void> initializeUserId() async {
+    userId = await getIdFromSharedPreferences();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      body: Center(
-        child: SizedBox(
-          width: deviceTypeTablet() ? 400 : screenWidth,
-          child: Column(
-            children: [
-              _transactionText(),
-              _saldo(),
-              _paySubscription(),
-              _recentActivityText(),
-              _buildCashList(),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: _botBar(context),
+      body: maintenance
+          ? maintananceWidget()
+          : Center(
+              child: SizedBox(
+                width: deviceTypeTablet() ? 600 : screenWidth,
+                child: Column(
+                  children: [
+                    _transactionText(),
+                    _saldo(),
+                    _paySubscription(),
+                    _recentActivityText(),
+                    _buildCashList(),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
-  Container _recentActivityText() {
-    return Container(
-      width: 330,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Recent Activity',
-            style: TextStyle(
-              color: Color(0xFF06080C),
-              fontSize: 14,
-              fontFamily: 'Plus Jakarta Sans',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.pushNamed(context, '/cashflow');
-            },
-            child: Text(
-              'View more',
+  _recentActivityText() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Container(
+        width: 430,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Activity',
               style: TextStyle(
-                color: Color(0xFF39810D),
-                fontSize: 12,
+                color: Color(0xFF06080C),
+                fontSize: 14,
                 fontFamily: 'Plus Jakarta Sans',
-                fontWeight: FontWeight.w400,
+                fontWeight: FontWeight.w600,
               ),
             ),
-          )
-        ],
+            GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(context, '/cashflow');
+              },
+              child: Text(
+                'View more',
+                style: TextStyle(
+                  color: Color(0xFF39810D),
+                  fontSize: 12,
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -93,10 +126,10 @@ class _TransactionPageState extends State<TransactionPage> {
 
   Padding _saldo() {
     return Padding(
-      padding: const EdgeInsets.only(top: 32),
+      padding: const EdgeInsets.only(top: 32, left: 16, right: 16),
       child: IntrinsicHeight(
         child: Container(
-          width: 360,
+          width: 460,
           clipBehavior: Clip.antiAlias,
           decoration: ShapeDecoration(
               shape: RoundedRectangleBorder(
@@ -193,16 +226,34 @@ class _TransactionPageState extends State<TransactionPage> {
   }
 
   Expanded saldoOwn() {
+    final formattedSaldo = saldoFuture != null
+        ? NumberFormat.decimalPattern('vi_VN').format(saldoFuture).toString()
+        : '';
+
     return Expanded(
-      child: Text(
-        isAmountVisible ? '10.000.000' : '-',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      child: saldoFuture == null
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  child: CircularProgressIndicator(
+                    color: Color.fromARGB(118, 231, 231, 231),
+                  ),
+                ),
+                Container(),
+              ],
+            )
+          : Text(
+              isAmountVisible ? formattedSaldo : '-',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
     );
   }
 
@@ -233,8 +284,8 @@ class _TransactionPageState extends State<TransactionPage> {
   Image backgroundPhoto() {
     return Image.asset(
       'images/SaldoBg.png',
-      width: 360,
-      height: 180,
+      width: 460,
+      height: 200,
       fit: BoxFit.fill,
     );
   }
@@ -243,37 +294,42 @@ class _TransactionPageState extends State<TransactionPage> {
     return Flexible(
       flex: 0,
       fit: FlexFit.tight,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: ShapeDecoration(
-            color: Colors.white.withOpacity(0.15),
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                width: 1.5,
-                strokeAlign: BorderSide.strokeAlignCenter,
-                color: Colors.white,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(context, '/withdraw');
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: ShapeDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  width: 1.5,
+                  strokeAlign: BorderSide.strokeAlignCenter,
+                  color: Colors.white,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              )),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                'images/Add.png',
+                width: 12,
+                height: 12,
               ),
-              borderRadius: BorderRadius.circular(20),
-            )),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset(
-              'images/Add.png',
-              width: 12,
-              height: 12,
-            ),
-            SizedBox(width: 6),
-            Text(
-              'Tarik Tunai',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontFamily: 'Asap',
-                fontWeight: FontWeight.w400,
+              SizedBox(width: 6),
+              Text(
+                'Tarik Tunai',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontFamily: 'Asap',
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -370,6 +426,27 @@ class _TransactionPageState extends State<TransactionPage> {
     );
   }
 
+  maintananceWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Under Maintenance',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 20),
+          CircularProgressIndicator(
+            color: Color(0xFF38800C),
+          ),
+        ],
+      ),
+    );
+  }
+
   _paySubscription() {
     final double screenwidth = MediaQuery.of(context).size.width;
     return Container(
@@ -383,8 +460,14 @@ class _TransactionPageState extends State<TransactionPage> {
         itemBuilder: (context, index) {
           return GestureDetector(
             onTap: () {
-              Navigator.pushNamed(context, '/nominaltransfer',
-                  arguments: chats[index]);
+              setState(() {
+                selectedUser = favorites[index].name;
+                selectedIndex = favorites[index];
+              });
+              Navigator.pushNamed(context, '/nominaltransfer', arguments: {
+                'user': selectedIndex,
+                'transferTarget': selectedUser,
+              });
             },
             child: Padding(
               padding: const EdgeInsets.only(
@@ -415,58 +498,81 @@ class _TransactionPageState extends State<TransactionPage> {
     );
   }
 
-  BottomAppBar _botBar(BuildContext context) {
-    return BottomAppBar(
-      height: 60,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/home');
-              },
-              icon: Image.asset('images/HomePlain.png')),
-          IconButton(
-              onPressed: () {}, icon: Image.asset('images/dolarGreen.png')),
-          IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/listchat');
-              },
-              icon: Image.asset('images/Message.png')),
-          IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/profile');
-              },
-              icon: Image.asset('images/User.png')),
-        ],
-      ),
-    );
+  Future<void> refresh() async {
+    setState(() {
+      _fetchTransaction = DigitalMoney().fetchData();
+    });
+    try {
+      int saldo = await fetchOwnSaldo();
+      setState(() {
+        saldoFuture = saldo;
+      });
+    } catch (e) {
+      print(e);
+    }
+    setState(() {});
   }
 
   _buildCashList() {
     return Expanded(
-      child: ListView.builder(
-        physics: BouncingScrollPhysics(),
-        shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        itemCount: cashList.length,
-        itemBuilder: (context, index) {
-          final cash = cashList[index];
-          return _buildCashListItem(cash);
-        },
+      child: RefreshIndicator(
+        displacement: 10,
+        onRefresh: refresh,
+        color: Color(0xFF39810D),
+        child: FutureBuilder<List<Transaction>>(
+          future: _fetchTransaction, // Pass your token here
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return loadingData();
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No transactions available.'));
+            } else {
+              List<Transaction> transactions = snapshot.data!;
+              return ScrollConfiguration(
+                behavior: NoGlowBehavior(),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: transactions.length,
+                  itemBuilder: (context, index) {
+                    final transaction = transactions[index];
+                    return _buildCashListItem(transaction);
+                  },
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
   }
 
-  _buildCashListItem(Cash cash) {
+  String titleTextLogic(Transaction transaction) {
+    bool isIncrease = transaction.receiverId == userId;
+
+    if (transaction.transactionType == 'topup') {
+      return 'Melakukan Top Up';
+    } else if (transaction.transactionType == 'transfer') {
+      if (isIncrease) {
+        return 'Uang Masuk dari ${transaction.receiverId}';
+      } else {
+        return 'Uang Keluar ke ${transaction.receiverId}';
+      }
+    } else {
+      return 'Melakukan Tarik Tunai';
+    }
+  }
+
+  _buildCashListItem(Transaction transaction) {
+    bool isIncrease = userId == transaction.receiverId;
     final Color containerColor =
-        cash.payOrBuy ? Color(0x19FF2E2E) : Color(0x192EB22B);
-    final Color textColor =
-        cash.payOrBuy ? Color(0xFFFF2E2E) : Color(0xFF2FB22C);
-    final String titleText = cash.payOrBuy
-        ? 'Pembayaran ke ${cash.titleflow}'
-        : 'Uang Masuk dari ${cash.titleflow}';
-    final String rp = cash.payOrBuy ? '-Rp. ' : 'Rp. ';
+        isIncrease ? Color(0x192EB22B) : Color(0x19FF2E2E);
+    final Color textColor = isIncrease ? Color(0xFF2FB22C) : Color(0xFFFF2E2E);
+    final String rp = isIncrease ? 'Rp. ' : '-Rp. ';
+    print("cek ${transaction.orderId}");
+
     return Column(
       children: [
         Container(
@@ -494,7 +600,7 @@ class _TransactionPageState extends State<TransactionPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    titleText,
+                    titleTextLogic(transaction),
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 12,
@@ -504,7 +610,7 @@ class _TransactionPageState extends State<TransactionPage> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '${cash.date}',
+                    formatOrderIdDate(transaction.orderId),
                     style: TextStyle(
                       color: Color(0xFF828993),
                       fontSize: 10,
@@ -534,7 +640,8 @@ class _TransactionPageState extends State<TransactionPage> {
                       ),
                     ),
                     Text(
-                      '${cash.detailCash}',
+                      NumberFormat.decimalPattern('vi_VN')
+                          .format(int.tryParse(transaction.nominal)),
                       style: TextStyle(
                         color: textColor,
                         fontSize: 8,
@@ -554,5 +661,18 @@ class _TransactionPageState extends State<TransactionPage> {
         ),
       ],
     );
+  }
+
+  String formatOrderIdDate(String orderId) {
+    String year = orderId.substring(2, 6);
+    String month = orderId.substring(6, 8);
+    String day = orderId.substring(8, 10);
+
+    DateTime dateTime =
+        DateTime(int.parse(year), int.parse(month), int.parse(day));
+
+    String formattedDate = DateFormat('d MMM y', 'id_ID').format(dateTime);
+
+    return formattedDate;
   }
 }

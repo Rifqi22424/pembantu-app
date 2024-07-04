@@ -1,7 +1,10 @@
 import 'dart:convert';
-import 'package:prt/src/api/fetch_user_data.dart';
-import 'package:sqflite/sqflite.dart';
+
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../api/fetch_user_data.dart';
+import 'user_profile_table.dart';
 
 class CacheDatabase {
   static final CacheDatabase _instance = CacheDatabase._internal();
@@ -19,43 +22,48 @@ class CacheDatabase {
 
   Future<Database> initDatabase() async {
     String path = join(await getDatabasesPath(), 'cache_database.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    print('Database path: $path');
+
+    final db = await openDatabase(path, version: 1, onCreate: _onCreate);
+    print('Database opened successfully');
+
+    return db;
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await db.execute('CREATE TABLE IF NOT EXISTS cache_data ('
-        'id INTEGER PRIMARY KEY, '
-        'data TEXT)');
+    await UserProfilesTable.onCreate(db, version);
   }
 
   Future<void> insertCacheData(List<UserProfile> userProfiles) async {
     final db = await database;
-    final jsonData = jsonEncode(userProfiles);
-    await db.insert(
-      'cache_data',
-      {'data': jsonData},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    final batch = db.batch();
+
+    for (final profile in userProfiles) {
+      batch.insert(
+        'user_profiles',
+        profile.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+
+    await batch.commit();
   }
 
   Future<List<UserProfile>?> getCacheData() async {
     final db = await database;
     final List<Map<String, dynamic>> maps =
-        await db.query('cache_data', orderBy: 'id DESC', limit: 1);
+        await db.query('user_profiles', orderBy: 'id DESC', limit: 1);
 
     if (maps.isNotEmpty) {
       final map = maps.first;
-      final jsonData = map['data'] as String;
-      final userProfiles = (jsonDecode(jsonData) as List<dynamic>)
-          .map((data) => UserProfile(
-                email: data['email'],
-                phone: data['phone'],
-                isLiked: data['is_liked'] == 1,
-                profile: data['profile'],
-                category: data['category'],
-              ))
-          .toList();
-      return userProfiles;
+      final jsonData = map['data'] as String?;
+
+      if (jsonData != null) {
+        final userProfiles = (jsonDecode(jsonData) as List<dynamic>)
+            .map((data) => UserProfile.fromMap(data))
+            .toList();
+        return userProfiles;
+      }
     }
     return null;
   }

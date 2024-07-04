@@ -2,12 +2,13 @@ class InterviewFree {
   final DateTime date;
   final int day;
   final String month;
-
+  final int monthInt;
 
   InterviewFree({
     required this.date,
     required this.day,
     required this.month,
+    required this.monthInt,
   });
 }
 
@@ -15,18 +16,19 @@ List<InterviewFree> generateInterviewFreeList() {
   final now = DateTime.now();
   final interviewFreeList = <InterviewFree>[];
   final currentMonth = now.month;
-  
 
   for (var i = 0; i < 6; i++) {
     final currentDate = now.add(Duration(days: i));
     final day = currentDate.day;
     final month = _getMonthName(currentMonth);
+    final monthInt = currentMonth;
 
     interviewFreeList.add(
       InterviewFree(
         date: currentDate,
         day: day,
         month: month,
+        monthInt: monthInt,
       ),
     );
   }

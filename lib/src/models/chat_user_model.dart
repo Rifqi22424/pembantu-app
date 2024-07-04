@@ -16,6 +16,12 @@ final CUser currentUser = CUser(
   imageUrl: 'images/John.jpg',
 );
 
+final CUser admin = CUser(
+  id: 9,
+  name: 'Call Center',
+  imageUrl: 'images/Phone.ppg',
+);
+
 final CUser johnDoe = CUser(
   id: 1,
   name: 'John Doe',
@@ -83,3 +89,4 @@ final List<CUser> subscriptions = [
   davidMiller,
   oliviaWilson
 ];
+

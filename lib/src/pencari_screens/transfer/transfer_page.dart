@@ -1,9 +1,12 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:prt/src/models/chat_user_model.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
+
+import '../../api/digital_money.dart';
 
 class TransferPage extends StatefulWidget {
   const TransferPage({super.key});
@@ -16,6 +19,17 @@ class _TransferPageState extends State<TransferPage> {
   String namalengkap = '';
   String selectedUser = '';
   CUser? selectedIndex;
+  int? saldoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOwnSaldo().then((saldo) {
+      setState(() {
+        saldoFuture = saldo;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,12 +64,16 @@ class _TransferPageState extends State<TransferPage> {
   }
 
   saldoAnda() {
+    final formattedSaldo = saldoFuture != null
+        ? NumberFormat.decimalPattern('vi_VN').format(saldoFuture).toString()
+        : '';
+
     return Padding(
       padding: const EdgeInsets.only(left: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Text(
             'Saldo Anda',
             textAlign: TextAlign.center,
@@ -68,7 +86,7 @@ class _TransferPageState extends State<TransferPage> {
           ),
           SizedBox(height: 8),
           Text(
-            'Rp. 10.000.000',
+            "Rp. $formattedSaldo",
             style: TextStyle(
               color: Colors.black,
               fontSize: 18,
@@ -224,18 +242,19 @@ class _TransferPageState extends State<TransferPage> {
         padding: const EdgeInsets.only(bottom: 24.0),
         child: ElevatedButton(
           style: ButtonStyle(
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            shape: WidgetStateProperty.all<RoundedRectangleBorder>(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(32),
               ),
             ),
-            backgroundColor:
-                MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-            minimumSize: MaterialStateProperty.all<Size>(Size(320, 44)),
+            backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+            minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
           ),
           onPressed: () {
-            Navigator.pushNamed(context, '/nominaltransfer',
-                arguments: selectedIndex);
+            Navigator.pushNamed(context, '/nominaltransfer', arguments: {
+              'user': selectedIndex,
+              'transferTarget': selectedUser,
+            });
           },
           child: Text(
             'Transfer',

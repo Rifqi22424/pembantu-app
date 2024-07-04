@@ -14,16 +14,13 @@ class ChoosePage extends StatefulWidget {
 class _ChoosePageState extends State<ChoosePage> {
   bool isBoxPekerjaPressed = false;
   bool isBoxPencariPressed = false;
-  late String authToken;
-  late String id;
-  late String role;
+  String? role;
   late RegistPekerjaModel pekerjaRegist;
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    authToken = '1|wLQRRxEnI5e4U6LMb6dUn49LJovzoUwKy8rUq9lh66972726';
-    id = '1';
     pekerjaRegist = RegistPekerjaModel();
   }
 
@@ -196,48 +193,78 @@ class _ChoosePageState extends State<ChoosePage> {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: ElevatedButton(
         style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
           ),
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
-              MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
         ),
         onPressed: () async {
+          print(role);
           if (isBoxPekerjaPressed) {
             role = 'pekerja'; // Ubah menjadi "2" jika isBoxPekerjaPressed aktif
           } else if (isBoxPencariPressed) {
             role = 'majikan'; // Ubah menjadi "1" jika isBoxPencariPressed aktif
           }
 
-          try {
-            bool success = await pekerjaRegist.registerFirstPage(role);
-
-            if (success) {
-              // Registrasi berhasil, lanjutkan dengan navigasi ke halaman selanjutnya
-              if (isBoxPekerjaPressed) {
-                Navigator.pushNamed(context, '/registpekerjadatadiri');
-              } else if (isBoxPencariPressed) {
-                Navigator.pushNamed(context, '/home');
+          if (isBoxPekerjaPressed == true || isBoxPencariPressed == true) {
+            try {
+              setState(() {
+                isLoading = true;
+              });
+              bool success = await pekerjaRegist.registerFirstPage(role!);
+              if (success) {
+                if (isBoxPekerjaPressed) {
+                  Navigator.pushNamed(context, '/registpekerjadatadiri');
+                  setState(() {
+                    isLoading = false;
+                  });
+                } else if (isBoxPencariPressed) {
+                  Navigator.pushNamed(context, '/registpencaridatadiri');
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Pilih salah satu dari role diatas')));
+                setState(() {
+                  isLoading = false;
+                });
               }
-            } else {
-              // Registrasi gagal, tambahkan penanganan error sesuai kebutuhan Anda
+            } catch (e) {
+              print('Error: $e');
+              setState(() {
+                isLoading = false;
+              });
             }
-          } catch (e) {
-            print('Error: $e'); // Tangani error jika terjadi
+          } else {
+            _showTopSnackbar(context);
+            setState(() {
+              isLoading = false;
+            });
           }
         },
-        child: Text(
-          'Selanjutnya',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                'Selanjutnya',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontFamily: 'Asap',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
     );
   }
@@ -270,5 +297,38 @@ class _ChoosePageState extends State<ChoosePage> {
         ],
       ),
     );
+  }
+
+  void _showTopSnackbar(BuildContext context) {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 0,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            color: Color(0xFFFF2222), // Warna latar belakang
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Pilih salah satu role!',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlayState.insert(overlayEntry);
+
+    // Hilangkan Snackbar setelah beberapa detik (opsional)
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
 }

@@ -2,10 +2,20 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:prt/src/database/shared_preferences.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
 class StrukTopUpPage extends StatefulWidget {
-  const StrukTopUpPage({super.key});
+  final int digitTopUp;
+  final String bankImages;
+  final String bankNames;
+  final int bankIndex;
+  StrukTopUpPage(
+      {required this.digitTopUp,
+      required this.bankImages,
+      required this.bankNames,
+      required this.bankIndex});
 
   @override
   State<StrukTopUpPage> createState() => _StrukTopUpPageState();
@@ -16,24 +26,27 @@ class _StrukTopUpPageState extends State<StrukTopUpPage> {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      body: Center(
-        child: Container(
-          width: deviceTypeTablet() ? 340 : screenWidth,
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  back(context),
-                  title(),
-                  cancel(context),
-                ],
-              ),
-              TopUpSuccesSign(),
-              InformationText(),
-              SizedBox(height: 16),
-              Button(),
-            ],
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: Center(
+          child: Container(
+            width: deviceTypeTablet() ? 340 : screenWidth,
+            child: Column(
+              children: [
+                Stack(
+                  children: [
+                    // back(context),
+                    // title(),
+                    cancel(context),
+                  ],
+                ),
+                TopUpSuccesSign(),
+                InformationText(),
+                // SizedBox(height: 16),
+                // Button(),
+              ],
+            ),
           ),
         ),
       ),
@@ -72,7 +85,7 @@ class _StrukTopUpPageState extends State<StrukTopUpPage> {
             ),
             SizedBox(height: 12),
             Text(
-              'Rp. 10.000.000',
+              'Rp. ${NumberFormat.decimalPattern('vi_VN').format(widget.digitTopUp)}',
               style: TextStyle(
                 color: Color(0xFF080C11),
                 fontSize: 13,
@@ -126,10 +139,10 @@ class _StrukTopUpPageState extends State<StrukTopUpPage> {
                 Container(
                     width: 35,
                     height: 35,
-                    child: Image.asset('images/BRILogo.png')),
+                    child: Image.asset(widget.bankImages)),
                 SizedBox(width: 12),
                 Text(
-                  'BRI',
+                  widget.bankNames,
                   style: TextStyle(
                     color: Color(0xFF080C11),
                     fontSize: 10,
@@ -271,9 +284,17 @@ class _StrukTopUpPageState extends State<StrukTopUpPage> {
       child: Align(
         alignment: Alignment.topRight,
         child: GestureDetector(
-          onTap: () {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/home', (route) => false);
+          onTap: () async {
+
+            String? role = await getRoleFromSharedPreferences();
+            
+            if (role == 'majikan') {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/home', (route) => false);
+            } else if (role == 'pekerja') {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/homepekerja', (route) => false);
+            }
           },
           child: Container(
             width: 30,
@@ -300,14 +321,14 @@ class _StrukTopUpPageState extends State<StrukTopUpPage> {
   Button() {
     return ElevatedButton(
       style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
           ),
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFFFFDBDB)),
-          minimumSize: MaterialStateProperty.all<Size>(Size(320, 44)),
-          foregroundColor: MaterialStateProperty.all<Color>(Color(0xFFFF2222))),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFFFFDBDB)),
+          minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
+          foregroundColor: WidgetStateProperty.all<Color>(Color(0xFFFF2222))),
       onPressed: () {},
       child: Text(
         'Batalkan Pembayaran',

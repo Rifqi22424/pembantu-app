@@ -3,17 +3,19 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:prt/src/api/auth_model.dart';
+import 'package:prt/src/api/push_notif.dart';
+import 'package:prt/src/database/shared_preferences.dart';
+import 'package:prt/src/mixins/validation_mixin.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
 class LoginPage extends StatefulWidget {
-  // ignore: use_key_in_widget_constructors
   const LoginPage({Key? key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with ValidationMixin {
   final Auth authService = Auth();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -22,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isPasswordVisible = false;
   String email = '';
   String password = '';
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +68,6 @@ class _LoginPageState extends State<LoginPage> {
                         forgetText(),
                         SizedBox(height: 30),
                         submitButton(),
-                        SizedBox(height: screenHeight * 0.18)
                       ],
                     ),
                   ],
@@ -114,17 +116,28 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Align forgetText() {
+  forgetText() {
     return Align(
       alignment: Alignment.centerRight,
-      child: Text(
-        'Forget password',
-        textAlign: TextAlign.right,
-        style: TextStyle(
-          color: Color(0xFF828993),
-          fontSize: 10,
-          fontFamily: 'Asap',
-          fontWeight: FontWeight.w400,
+      child: InkWell(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return overlayUnderMaintanance(context);
+            },
+          );
+          print("tapped");
+        },
+        child: Text(
+          'Forget password',
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            color: Color(0xFF828993),
+            fontSize: 10,
+            fontFamily: 'Asap',
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ),
     );
@@ -162,94 +175,103 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   googleNFacebook() {
-    // ignore: avoid_unnecessary_containers
-    return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            flex: 2,
-            fit: FlexFit.tight,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/profilepekerja');
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(32),
-                    )),
-                width: 150,
-                height: 50,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'images/GoogleLogo.png',
-                      width: 22,
-                      height: 22,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          flex: 2,
+          fit: FlexFit.tight,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(32),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return overlayUnderMaintanance(context);
+                },
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(32),
+                  )),
+              width: 150,
+              height: 50,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'images/GoogleLogo.png',
+                    width: 22,
+                    height: 22,
+                  ),
+                  SizedBox(
+                    width: 8,
+                  ),
+                  Text(
+                    'Google',
+                    style: TextStyle(
+                      color: Color(0xFF828993),
+                      fontSize: 11,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
                     ),
-                    SizedBox(
-                      width: 8,
-                    ),
-                    Text(
-                      'Google',
-                      style: TextStyle(
-                        color: Color(0xFF828993),
-                        fontSize: 11,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
             ),
           ),
-          SizedBox(width: 24),
-          Flexible(
-            flex: 2,
-            fit: FlexFit.tight,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pushNamed(context, '/incomingcall');
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(32),
-                    )),
-                width: 150,
-                height: 50,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'images/FacebookLogo.png',
-                      width: 22,
-                      height: 22,
+        ),
+        SizedBox(width: 24),
+        Flexible(
+          flex: 2,
+          fit: FlexFit.tight,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(32),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return overlayUnderMaintanance(context);
+                },
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(32),
+                  )),
+              width: 150,
+              height: 50,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'images/FacebookLogo.png',
+                    width: 22,
+                    height: 22,
+                  ),
+                  SizedBox(
+                    width: 8,
+                  ),
+                  Text(
+                    'Facebook',
+                    style: TextStyle(
+                      color: Color(0xFF828993),
+                      fontSize: 11,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
                     ),
-                    SizedBox(
-                      width: 8,
-                    ),
-                    Text(
-                      'Facebook',
-                      style: TextStyle(
-                        color: Color(0xFF828993),
-                        fontSize: 11,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -293,132 +315,274 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget emailField() {
-    return Container(
-      width: double.maxFinite,
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+    return TextFormField(
+      validator: validateEmail,
+      controller: emailController,
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
+        height: 1.71,
       ),
-      child: TextFormField(
-        controller: emailController,
-        style: TextStyle(
-          color: Color(0xFF080C11),
+      keyboardType: TextInputType.emailAddress,
+      decoration: InputDecoration(
+        labelText: 'Masukkan email',
+        border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.blue, // Warna border
+              width: 2.0, // Lebar border
+            ),
+            borderRadius: BorderRadius.circular(32)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        labelStyle: TextStyle(
+          color: Color(0xFF828993),
           fontSize: 12,
           fontFamily: 'Asap',
           fontWeight: FontWeight.w400,
           height: 1.71,
         ),
-        keyboardType: TextInputType.emailAddress,
-        decoration: InputDecoration(
-          hintText: 'example@gmail.com',
-          border: InputBorder.none,
+      ),
+      // validator: validateEmail,
+      onSaved: (String? value) {
+        email = value!;
+      },
+    );
+  }
+
+  Widget passwordField() {
+    return TextFormField(
+      validator: validatePassword,
+      controller: passwordController,
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
+        height: 1.71,
+      ),
+      obscureText: !isPasswordVisible,
+      decoration: InputDecoration(
           contentPadding:
               EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
+          labelText: 'Password',
+          border: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.blue, // Warna border
+                width: 2.0, // Lebar border
+              ),
+              borderRadius: BorderRadius.circular(32)),
+          labelStyle: TextStyle(
             color: Color(0xFF828993),
             fontSize: 12,
             fontFamily: 'Asap',
             fontWeight: FontWeight.w400,
             height: 1.71,
           ),
-        ),
-        // validator: validateEmail,
-        onSaved: (String? value) {
-          email = value!;
-        },
-      ),
-    );
-  }
-
-  Widget passwordField() {
-    return Container(
-      width: double.maxFinite,
-      height: 54,
-      decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.all(Radius.circular(32))),
-      child: TextFormField(
-        controller: passwordController,
-        style: TextStyle(
-          color: Color(0xFF080C11),
-          fontSize: 12,
-          fontFamily: 'Asap',
-          fontWeight: FontWeight.w400,
-          height: 1.71,
-        ),
-        obscureText: !isPasswordVisible,
-        decoration: InputDecoration(
-            hintText: 'Password',
-            border: InputBorder.none,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            hintStyle: TextStyle(
-              color: Color(0xFF828993),
-              fontSize: 12,
-              fontFamily: 'Asap',
-              fontWeight: FontWeight.w400,
-              height: 1.71,
+          suffixIcon: IconButton(
+            icon: Icon(
+              isPasswordVisible ? Icons.visibility : Icons.visibility_off,
             ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-              ),
-              onPressed: () {
-                setState(() {
-                  isPasswordVisible = !isPasswordVisible;
-                });
-              },
-            )),
-        // validator: validatePassword,
-        onSaved: (String? value) {
-          password = value!;
-        },
-      ),
+            onPressed: () {
+              setState(() {
+                isPasswordVisible = !isPasswordVisible;
+              });
+            },
+          )),
+      // validator: validatePassword,
+      onSaved: (String? value) {
+        password = value!;
+      },
     );
   }
 
   Widget submitButton() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize:
-            MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
       ),
-      onPressed: () {
-        // if (formKey.currentState!.validate()) {
-        //   formKey.currentState!.save();
-        //   try {
-        //     String token = await authService.login(
-        //       email,
-        //       password,
-        //     );
-        //     if (token.isNotEmpty) {
-        //       SharedPreferences prefs = await SharedPreferences.getInstance();
-        //       await prefs.setString('auth_token', token);
-        //       print(token);
-        //       Navigator.pushNamed(context, '/home');
-        //     }
-        //   } catch (e) {
-        //     print('Error: $e');
-        //   }
-        // }
-        Navigator.pushNamed(context, '/home');
+      onPressed: () async {
+        String? deviceToken = await getDeviceTokenFromSharedPreferences();
+        if (formKey.currentState!.validate()) {
+          formKey.currentState!.save();
+          if (email == '' || password == '') {
+            _showTopSnackbar(context, "Lengkapi data terlebih dahulu");
+          } else {
+            try {
+              setState(() {
+                isLoading = true;
+              });
+
+              Map<String, dynamic> data = await authService.login(
+                email,
+                password,
+              );
+              if (data['id'] != "" || data['id'] != null) {
+                final int id = data['id'];
+                final String token = data['token'];
+                final String role = data['role'];
+
+                await saveIdToSharedPreferences(id);
+                await FirebaseNotifAPI().putToken(deviceToken!);
+                await saveTokenToSharedPreferences(token);
+                await saveRoleToSharedPreferences(role);
+                print(role);
+                if (role == 'majikan') {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/home', (route) => false);
+                  setState(() {
+                    isLoading = false;
+                  });
+                } else if (role == 'pekerja') {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/homepekerja', (route) => false);
+                  setState(() {
+                    isLoading = false;
+                  });
+                }
+              }
+            } catch (e) {
+              print(e.toString());
+              _showTopSnackbar(
+                  context, e.toString().replaceFirst('Exception: ', ''));
+              setState(() {
+                isLoading = false;
+              });
+            }
+          }
+        }
       },
-      child: Text(
-        'Login',
-        style: TextStyle(
+      child: isLoading
+          ? SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            )
+          : Text(
+              'Login',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+    );
+  }
+
+  void _showTopSnackbar(BuildContext context, String text) {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 0,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            color: Color(0xFFFF2222), // Warna latar belakang
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  text,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlayState.insert(overlayEntry);
+
+    // Hilangkan Snackbar setelah beberapa detik (opsional)
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
+  AlertDialog overlayUnderMaintanance(BuildContext context) {
+    return AlertDialog(
+      contentPadding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(32),
+      ),
+      content: Container(
+        width: 350,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
           color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.grey,
+              offset: Offset(0, 2),
+              blurRadius: 5.0,
+              spreadRadius: 0.0,
+            ),
+          ],
+        ),
+        child: IntrinsicHeight(
+          child: Container(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                deleteButton(context),
+                // Image.asset('images/check.png', width: 70, height: 70),
+                Icon(
+                  Icons.construction,
+                  color: Colors.amber[900],
+                  size: 70,
+                ),
+                SizedBox(height: 22),
+                const Text(
+                  'Dalam Pengembangan',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF080C11),
+                    fontSize: 18,
+                    fontFamily: 'Asap',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 22),
+                const Text(
+                  'Mohon untuk melakukan registrasi atau login menggunakan autentikasi manual.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF828993),
+                    fontSize: 12,
+                    fontFamily: 'Asap',
+                    fontWeight: FontWeight.w400,
+                    height: 1.71,
+                  ),
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget deleteButton(BuildContext context) {
+    return Align(
+      alignment: Alignment.topRight,
+      child: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: Icon(Icons.close)),
     );
   }
 }

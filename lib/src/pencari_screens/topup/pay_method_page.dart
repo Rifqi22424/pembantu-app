@@ -1,46 +1,66 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:prt/src/models/pay_method_model.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
+import '../../api/digital_money.dart';
+
 class PayMethod extends StatefulWidget {
-  const PayMethod({super.key});
+  final int digitTopUp;
+
+  PayMethod({super.key, required this.digitTopUp});
 
   @override
   State<PayMethod> createState() => _PayMethodState();
 }
 
 class _PayMethodState extends State<PayMethod> {
+  final DigitalMoney digitalMoney = DigitalMoney();
   bool isOverlayVisible = false;
   int selectedIndex = -1;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
+    final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 24),
           width: deviceTypeTablet() ? 340 : screenWidth,
+          height: screenHeight,
           child: Stack(
             children: [
-              Column(
-                children: [
-                  Stack(
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    isOverlayVisible = false;
+                  });
+                },
+                child: Opacity(
+                  opacity: isOverlayVisible ? 0.5 : 1.0,
+                  child: Column(
                     children: [
-                      back(context),
-                      title(),
-                      cancel(context),
+                      Stack(
+                        children: [
+                          back(context),
+                          title(),
+                          cancel(context),
+                        ],
+                      ),
+                      InformationText(),
+                      SizedBox(height: 24),
+                      payMethodContent(context),
+                      Spacer(),
+                      button(),
+                      SizedBox(height: 24)
                     ],
                   ),
-                  InformationText(),
-                  SizedBox(height: 24),
-                  payMethodContent(context),
-                  SizedBox(height: 28),
-                  Button(),
-                ],
+                ),
               ),
               if (isOverlayVisible) PayMethodOverlay(),
             ],
@@ -52,6 +72,7 @@ class _PayMethodState extends State<PayMethod> {
 
   payMethodContent(context) {
     return Container(
+      margin: EdgeInsets.symmetric(horizontal: 24),
       padding: EdgeInsets.all(24),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
@@ -126,7 +147,7 @@ class _PayMethodState extends State<PayMethod> {
 
   Padding InformationText() {
     return Padding(
-      padding: const EdgeInsets.only(top: 34),
+      padding: const EdgeInsets.only(top: 34, left: 24, right: 24),
       child: Container(
         padding: EdgeInsets.only(top: 23, left: 24, right: 24, bottom: 26),
         decoration: BoxDecoration(
@@ -137,7 +158,7 @@ class _PayMethodState extends State<PayMethod> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Jumlah',
               style: TextStyle(
@@ -149,7 +170,7 @@ class _PayMethodState extends State<PayMethod> {
             ),
             SizedBox(height: 12),
             Text(
-              'Rp. 10.000.000',
+              'Rp. ${NumberFormat.decimalPattern('vi_VN').format(widget.digitTopUp)}',
               style: TextStyle(
                 color: Color(0xFF080C11),
                 fontSize: 13,
@@ -265,7 +286,7 @@ class _PayMethodState extends State<PayMethod> {
 
   back(context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 60),
+      padding: const EdgeInsets.only(top: 60, left: 24),
       child: Row(
         children: [
           GestureDetector(
@@ -308,7 +329,7 @@ class _PayMethodState extends State<PayMethod> {
 
   cancel(context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 60),
+      padding: const EdgeInsets.only(top: 60, right: 24),
       child: Align(
         alignment: Alignment.topRight,
         child: GestureDetector(
@@ -338,30 +359,109 @@ class _PayMethodState extends State<PayMethod> {
     );
   }
 
-  Button() {
+  button() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: MaterialStateProperty.all<Size>(Size(320, 44)),
+        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
       ),
-      onPressed: () {
-        Navigator.pushNamed(context, '/struktopup');
+      onPressed: () async {
+        print(selectedIndex);
+        if (selectedIndex == -1) {
+          _showTopSnackbar(
+              context, "Pilih metode pembayaran terlebih dahulu!", false);
+        } else {
+          int digitTopUp = widget.digitTopUp;
+          int bankIndex = methodList[selectedIndex].selectedIndex;
+          String bankImages = methodList[selectedIndex].imageUrl;
+          String bankNames = methodList[selectedIndex].nameBank;
+
+          print('$digitTopUp, $bankIndex, $bankImages, $bankNames');
+
+          try {
+            setState(() {
+              isLoading = true;
+            });
+            bool success = await digitalMoney.topup(digitTopUp, bankIndex);
+            if (success) {
+              Navigator.pushNamed(context, '/struktopup', arguments: {
+                'digitTopUp': digitTopUp,
+                'bankIndex': bankIndex,
+                'bankImages': bankImages,
+                'bankNames': bankNames,
+              });
+              setState(() {
+                isLoading = false;
+              });
+            }
+          } catch (e) {
+            print(e);
+
+            _showTopSnackbar(
+                context, e.toString().replaceFirst('Exception: ', ''), false);
+            setState(() {
+              isLoading = false;
+            });
+          }
+        }
       },
-      child: Text(
-        'Selanjutnya',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: isLoading
+          ? SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            )
+          : Text(
+              'Top Up Sekarang',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
     );
+  }
+
+  void _showTopSnackbar(BuildContext context, String label, bool isTrueColor) {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 0,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            color: isTrueColor ? Color(0xFF39810D) : Color(0xFFFF2222),
+            child: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    label,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlayState.insert(overlayEntry);
+
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
 
   PayMethodOverlay() {

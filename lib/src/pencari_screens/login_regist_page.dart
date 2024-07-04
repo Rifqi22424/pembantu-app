@@ -2,9 +2,39 @@
 
 import 'package:flutter/material.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
+import 'package:prt/src/widgets/text_styles.dart';
 
-class LoginRegistPage extends StatelessWidget {
+class LoginRegistPage extends StatefulWidget {
   const LoginRegistPage({super.key});
+
+  @override
+  State<LoginRegistPage> createState() => _LoginRegistPageState();
+}
+
+class _LoginRegistPageState extends State<LoginRegistPage>
+    with SingleTickerProviderStateMixin {
+  bool _isDragged = false;
+  double _top = 760;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500), // Adjust the duration as needed
+    );
+    _animation = Tween<double>(
+      begin: _top,
+      end: 760,
+    ).animate(_animationController);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,18 +63,47 @@ class LoginRegistPage extends StatelessWidget {
       left: 0,
       right: 0,
       bottom: 0,
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+      // top: _top,
+      child: GestureDetector(
+        onVerticalDragDown: (details) {
+          _isDragged = true;
+        },
+        onVerticalDragUpdate: (details) {
+          double bottomLimit = 760;
+          setState(() {
+            _top += details.primaryDelta! * 1;
+            if (_top > bottomLimit) {
+              _top = bottomLimit;
+            }
+          });
+        },
+        onVerticalDragEnd: (details) {
+          setState(() {
+            _isDragged = false;
+            _animation = Tween<double>(
+              begin: _top,
+              end: 760,
+            ).animate(_animationController)
+              ..addListener(() {
+                setState(() {
+                  _top = _animation.value;
+                });
+              });
+            _animationController.reset();
+            _animationController.forward();
+          });
+        },
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
             ),
           ),
-        ),
-        child: Center(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 25),
             child: Column(
@@ -76,23 +135,15 @@ class LoginRegistPage extends StatelessWidget {
         Navigator.pushNamed(context, '/regist');
       },
       style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
           ),
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFFF5F5F5)),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFFF5F5F5)),
           minimumSize:
-              MaterialStateProperty.all<Size>(Size(double.maxFinite, 44))),
-      child: Text(
-        'Sign Up',
-        style: TextStyle(
-          color: Color(0xFF828993),
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44))),
+      child: Text('Sign Up', style: TextStyles.greyButton),
     ));
   }
 
@@ -103,49 +154,26 @@ class LoginRegistPage extends StatelessWidget {
         Navigator.pushNamed(context, '/login');
       },
       style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
           ),
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
-              MaterialStateProperty.all<Size>(Size(double.maxFinite, 44))),
-      child: Text(
-        'Login',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44))),
+      child: Text('Login', style: TextStyles.button),
     ));
   }
 
   _longText() {
     return Text(
-      'Kami senang melihat kamu lagi, untuk menggunakan akun , masuk terlebih dahulu',
-      style: TextStyle(
-        color: Color(0xFF828892),
-        fontSize: 12,
-        fontFamily: 'Asap',
-        fontWeight: FontWeight.w400,
-        height: 1.70,
-      ),
-    );
+        'Kami senang melihat kamu lagi, untuk menggunakan akun, masuk terlebih dahulu',
+        style: TextStyles.regularText);
   }
 
   _selamatDatang() {
-    return Text(
-      'Selamat Datang 👋',
-      style: TextStyle(
-        color: Color(0xFF080B11),
-        fontSize: 22,
-        fontFamily: 'Asap',
-        fontWeight: FontWeight.w600,
-      ),
-    );
+    return Text('Selamat Datang 👋', style: TextStyles.welcomeTitle);
   }
 
   _greyLine() {

@@ -14,7 +14,22 @@ class ConfirmPinPage extends StatefulWidget {
 }
 
 class ConfirmPinPageState extends State<ConfirmPinPage> {
+  late FocusNode pinFocusNode;
   TextEditingController textEditingController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    pinFocusNode = FocusNode();
+    pinFocusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    pinFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -68,9 +83,10 @@ class ConfirmPinPageState extends State<ConfirmPinPage> {
               activeColor: Colors.black,
               inactiveColor: Colors.black,
               shape: PinCodeFieldShape.circle,
-              fieldHeight: 30,
-              fieldWidth: 30,
+              fieldHeight: 24,
+              fieldWidth: 24,
             ),
+            focusNode: pinFocusNode,
             obscureText: true,
             obscuringWidget: Container(
                 decoration: BoxDecoration(

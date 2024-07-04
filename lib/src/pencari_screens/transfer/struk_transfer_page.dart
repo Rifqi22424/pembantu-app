@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
+import '../../database/shared_preferences.dart';
+
 class StrukTransferPage extends StatelessWidget {
   const StrukTransferPage({super.key});
 
@@ -10,63 +12,66 @@ class StrukTransferPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-        body: Center(
-      child: Container(
-        width: deviceTypeTablet() ? 340 : screenWidth,
-        child: Stack(
-          children: [
-            greenBackground(),
-            SizedBox(
-              height: MediaQuery.of(context).size.height,
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      back(context),
-                      title(),
-                    ],
-                  ),
-                  SizedBox(height: 35),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 24, left: 24),
-                    child: Container(
-                      padding: EdgeInsets.only(
-                          left: 16, right: 16, top: 20, bottom: 20),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        color: Colors.white,
-                      ),
-                      child: Column(
-                        children: [
-                          checkSign(),
-                          TextSign(),
-                          SizedBox(height: 14),
-                          dateFrame(),
-                          Divider(thickness: 2, color: Color(0xFFE8E8E8)),
-                          SizedBox(height: 14),
-                          penerimaContainer(),
-                          SizedBox(height: 14),
-                          Divider(thickness: 2, color: Color(0xFFE8E8E8)),
-                          SizedBox(height: 14),
-                          pengirimContainer(),
-                          SizedBox(height: 14),
-                          Divider(thickness: 2, color: Color(0xFFE8E8E8)),
-                          SizedBox(height: 14),
-                          transaksiContainer(),
-                        ],
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+          body: Center(
+        child: Container(
+          width: deviceTypeTablet() ? 340 : screenWidth,
+          child: Stack(
+            children: [
+              greenBackground(),
+              SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        title(),
+                        cancel(context),
+                      ],
+                    ),
+                    SizedBox(height: 35),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 24, left: 24),
+                      child: Container(
+                        padding: EdgeInsets.only(
+                            left: 16, right: 16, top: 20, bottom: 20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(16)),
+                          color: Colors.white,
+                        ),
+                        child: Column(
+                          children: [
+                            checkSign(),
+                            TextSign(),
+                            SizedBox(height: 14),
+                            dateFrame(),
+                            Divider(thickness: 2, color: Color(0xFFE8E8E8)),
+                            SizedBox(height: 14),
+                            penerimaContainer(),
+                            SizedBox(height: 14),
+                            Divider(thickness: 2, color: Color(0xFFE8E8E8)),
+                            SizedBox(height: 14),
+                            pengirimContainer(),
+                            SizedBox(height: 14),
+                            Divider(thickness: 2, color: Color(0xFFE8E8E8)),
+                            SizedBox(height: 14),
+                            transaksiContainer(),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Spacer(),
-                  shareStruk(),
-                ],
+                    Spacer(),
+                    shareStruk(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    ));
+      )),
+    );
   }
 
   shareStruk() {
@@ -74,13 +79,13 @@ class StrukTransferPage extends StatelessWidget {
       padding: const EdgeInsets.only(top: 12, bottom: 16),
       child: ElevatedButton(
         style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
           ),
-          backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-          minimumSize: MaterialStateProperty.all<Size>(Size(320, 44)),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+          minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
         ),
         onPressed: () {
           // Navigator.of(context)
@@ -410,28 +415,41 @@ class StrukTransferPage extends StatelessWidget {
     );
   }
 
-  back(context) {
+  cancel(context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 24, top: 60),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 30,
-              height: 30,
-              padding: EdgeInsets.all(8),
-              clipBehavior: Clip.antiAlias,
-              decoration: ShapeDecoration(
-                color: Color(0xFFF5F5F5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(26),
-                ),
+      padding: const EdgeInsets.only(right: 24, top: 60),
+      child: Align(
+        alignment: Alignment.topRight,
+        child: GestureDetector(
+          onTap: () async {
+            String? role = await getRoleFromSharedPreferences();
+            
+            if (role == 'majikan') {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/home', (route) => false);
+            } else if (role == 'pekerja') {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/homepekerja', (route) => false);
+            }
+          },
+          child: Container(
+            width: 30,
+            height: 30,
+            padding: EdgeInsets.all(6),
+            clipBehavior: Clip.antiAlias,
+            decoration: ShapeDecoration(
+              color: Color(0xFFF5F5F5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(26),
               ),
-              child: Image.asset('images/NavBackTransparant.png'),
+            ),
+            child: Image.asset(
+              'images/x.png',
+              width: 20,
+              height: 20,
             ),
           ),
-        ],
+        ),
       ),
     );
   }

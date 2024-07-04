@@ -1,13 +1,16 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:prt/main.dart';
+import 'package:prt/src/api/digital_money.dart';
 import 'package:prt/src/api/fetch_user_data.dart';
+import 'package:prt/src/api/like_api.dart';
 import 'package:prt/src/provider/user_provider.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/limit_text.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
+import '../../widgets/loading_user_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,53 +19,74 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final UserProvider userProvider = UserProvider();
   String search = '';
   bool isAmountVisible = true;
   int selectedIndex = -1;
-  final List<String> types = ['ART', 'Supir', 'Satpam', 'Baby Sister', 'PRT'];
+  final List<String> types = ['ART', 'Supir', 'Satpam', 'Baby Sitter', 'PRT'];
   String? selectedCategory;
   bool tabletDevice = deviceTypeTablet();
+  Future<List<UserProfile>> _userProfileFuture = filterUserProfiles('all');
+  LikeApi likeApi = LikeApi();
+  String filter = 'all';
+  int? saldoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOwnSaldo().then((saldo) {
+      setState(() {
+        saldoFuture = saldo;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: ScrollConfiguration(
-        behavior: NoGlowBehavior(),
-        child: SingleChildScrollView(
-          child: Center(
-            child: Container(
-              width: deviceTypeTablet() ? 400 : screenWidth,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  mangCodingTextNRow(context),
-                  filterNSearch(context),
-                  saldoContent(),
-                  categoryNText(),
-                  selectCategory(),
-                  buildUserList(),
-                ],
+      body: RefreshIndicator(
+        onRefresh: refresh,
+        color: Color(0xFF39810D),
+        child: ScrollConfiguration(
+          behavior: NoGlowBehavior(),
+          child: SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: Center(
+              child: SizedBox(
+                width: deviceTypeTablet() ? 600 : screenWidth,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    mangCodingTextNRow(context),
+                    filterNSearch(context),
+                    saldoContent(),
+                    categoryNText(),
+                    selectCategory(),
+                    buildUserList(),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-      bottomNavigationBar: botBar(context),
-      floatingActionButton: floatingButton(),
     );
   }
 
   Padding mangCodingTextNRow(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 22, top: 45, right: 22),
+      padding: const EdgeInsets.only(left: 16, top: 45, right: 16),
       child: SizedBox(
-        width: 400,
+        width: 600,
         height: 60,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -75,20 +99,14 @@ class _HomePageState extends State<HomePage> {
                 mangcodingText(),
               ],
             ),
-            GestureDetector(
-              onTap: () {
-                final userList = userProvider.users;
-
-                Navigator.pushNamed(context, '/likedusers',
-                    arguments: userList);
-              },
-              child: Row(
-                children: [
-                  likedPageButton(),
-                  SizedBox(width: 10),
-                  notifPageButton(context),
-                ],
-              ),
+            Row(
+              children: [
+                schedulesButton(),
+                SizedBox(width: 10),
+                likedPageButton(),
+                SizedBox(width: 10),
+                notifPageButton(context),
+              ],
             ),
           ],
         ),
@@ -130,30 +148,72 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Container likedPageButton() {
-    return Container(
-      width: 34,
-      height: 34,
-      clipBehavior: Clip.antiAlias,
-      decoration: ShapeDecoration(
-        shape: RoundedRectangleBorder(
-          side: BorderSide(
-            width: 0.50,
-            strokeAlign: BorderSide.strokeAlignCenter,
-            color: Color(0xFFECECEC),
+  schedulesButton() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/schedules');
+      },
+      child: Container(
+        width: 34,
+        height: 34,
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              width: 0.50,
+              strokeAlign: BorderSide.strokeAlignCenter,
+              color: Color(0xFFECECEC),
+            ),
+            borderRadius: BorderRadius.circular(32),
           ),
-          borderRadius: BorderRadius.circular(32),
+        ),
+        child: Center(
+          child: Stack(
+            children: [
+              Image.asset(
+                'images/interviewTransparant.png',
+                color: Color(0xff828993),
+                width: 16,
+                height: 16,
+              ),
+            ],
+          ),
         ),
       ),
-      child: Center(
-        child: Stack(
-          children: [
-            Image.asset(
-              'images/Love.png',
-              width: 16,
-              height: 16,
+    );
+  }
+
+  likedPageButton() {
+    return GestureDetector(
+      onTap: () {
+        final userList = userProvider.users;
+
+        Navigator.pushNamed(context, '/likedusers', arguments: userList);
+      },
+      child: Container(
+        width: 34,
+        height: 34,
+        clipBehavior: Clip.antiAlias,
+        decoration: ShapeDecoration(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              width: 0.50,
+              strokeAlign: BorderSide.strokeAlignCenter,
+              color: Color(0xFFECECEC),
             ),
-          ],
+            borderRadius: BorderRadius.circular(32),
+          ),
+        ),
+        child: Center(
+          child: Stack(
+            children: [
+              Image.asset(
+                'images/Love.png',
+                width: 16,
+                height: 16,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -161,9 +221,9 @@ class _HomePageState extends State<HomePage> {
 
   categoryNText() {
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
       child: SizedBox(
-        width: 340,
+        width: 440,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -177,10 +237,10 @@ class _HomePageState extends State<HomePage> {
 
   Padding saldoContent() {
     return Padding(
-      padding: const EdgeInsets.only(top: 22),
+      padding: const EdgeInsets.only(top: 22, left: 16, right: 16),
       child: IntrinsicHeight(
         child: Container(
-          width: 360,
+          width: 460,
           clipBehavior: Clip.antiAlias,
           decoration: ShapeDecoration(
               shape: RoundedRectangleBorder(
@@ -222,9 +282,9 @@ class _HomePageState extends State<HomePage> {
 
   Padding filterNSearch(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 22, top: 20, right: 22),
+      padding: const EdgeInsets.only(left: 16, top: 20, right: 16),
       child: SizedBox(
-        width: 400,
+        width: 600,
         height: 50,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -239,18 +299,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  GestureDetector lihatSemuaButton() {
+  lihatSemuaButton() {
     return GestureDetector(
       onTap: () {
         setState(() {
           selectedCategory = null;
           selectedIndex = -1;
+          _userProfileFuture = filterUserProfiles('all');
         });
       },
       child: Text(
         'Lihat semua',
         style: TextStyle(
-          color: Color(0xFF828993),
+          color: selectedIndex != -1 ? Color(0xFF828993) : Color(0xFF439610),
           fontSize: 12,
           fontFamily: 'Asap',
           fontWeight: FontWeight.w400,
@@ -274,8 +335,8 @@ class _HomePageState extends State<HomePage> {
   Image backgroundImagesSaldo() {
     return Image.asset(
       'images/SaldoBg.png',
-      width: 360,
-      height: 180,
+      width: 460,
+      height: 200,
       fit: BoxFit.fill,
     );
   }
@@ -283,7 +344,7 @@ class _HomePageState extends State<HomePage> {
   filterButton() {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/search');
+        Navigator.pushNamed(context, '/search', arguments: false);
       },
       child: Container(
         width: 55,
@@ -325,7 +386,7 @@ class _HomePageState extends State<HomePage> {
       child: TextField(
         readOnly: true,
         onTap: () {
-          Navigator.pushNamed(context, '/search');
+          Navigator.pushNamed(context, '/search', arguments: true);
         },
         decoration: InputDecoration(
           hintText: 'Search...',
@@ -384,98 +445,109 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  floatingButton() {
-    return GestureDetector(
-      onTap: () {},
-      child: FloatingActionButton(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.white,
-        onPressed: () {},
-        child: Image.asset(
-          'images/Phone.png',
-          height: 24,
-          width: 24,
-        ),
-      ),
-    );
-  }
+  void _toggleUserLikedStatus(UserProfile user) async {
+    user.isLiked = !user.isLiked;
+    try {
+      likeApi.likeUser(user.id);
+    } catch (e) {
+      print(e);
+    }
 
-  botBar(BuildContext context) {
-    return BottomAppBar(
-      height: 60,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(onPressed: () {}, icon: Image.asset('images/Home.png')),
-          IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/transaction');
-              },
-              icon: Image.asset('images/Dolar.png')),
-          IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/listchat');
-              },
-              icon: Image.asset('images/Message.png')),
-          IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/profile');
-              },
-              icon: Image.asset('images/User.png')),
-        ],
-      ),
-    );
-  }
-
-  void _toggleUserLikedStatus(UserProfile user) {
-    final newIsLiked = !user.isLiked;
-    userProvider.updateUserLikedStatus(user.profile['id'], newIsLiked);
+    setState(() {});
   }
 
   buildUserList() {
     return FutureBuilder<List<UserProfile>>(
-      future: fetchUserProfiles(),
+      future: _userProfileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return loadingData();
         } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+          return errorUI('Tidak ada data');
         } else {
           final usersFromAPI = snapshot.data;
           if (usersFromAPI == null || usersFromAPI.isEmpty) {
-            return Text('Tidak ada data.');
+            return errorUI('Tidak ada data');
           }
 
-            List<UserProfile> filteredUsers = [];
+          List<UserProfile> filteredUsers = [];
+          print(selectedCategory);
 
           if (selectedCategory == null) {
             filteredUsers = usersFromAPI;
           } else {
-            filteredUsers = usersFromAPI.where((user) {
-              return user.category["name"] == selectedCategory;
-            }).toList();
+            filteredUsers = usersFromAPI.toList();
           }
 
           if (filteredUsers.isEmpty) {
-            return Text("Tidak ada data");
+            return errorUI('Tidak ada');
           }
 
-
-          return SizedBox(
-            width: 400,
-            child: ListView.builder(
-              shrinkWrap: true,
-              physics: BouncingScrollPhysics(),
-              padding: EdgeInsets.only(top: 6),
-              itemCount: filteredUsers.length,
-              itemBuilder: (context, index) {
-                final user = usersFromAPI[index];
-                return buildUserListItem(user);
-              },
-            ),
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: BouncingScrollPhysics(),
+            padding: EdgeInsets.only(top: 6),
+            itemCount: filteredUsers.length,
+            itemBuilder: (context, index) {
+              final user = filteredUsers[index];
+              return buildUserListItem(user);
+            },
           );
         }
       },
+    );
+  }
+
+  Future<void> refresh() async {
+    try {
+      int saldo = await fetchOwnSaldo();
+      selectedIndex = -1;
+      setState(() {
+        saldoFuture = saldo;
+      });
+    } catch (e) {
+      print(e);
+    }
+
+    setState(() {
+      _userProfileFuture = filterUserProfiles('all');
+    });
+  }
+
+  maintanance() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 100,
+        ),
+        Text("Sedang dalam maintanance"),
+      ],
+    );
+  }
+
+  errorUI(String error) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 100,
+        ),
+        Text(error),
+      ],
+    );
+  }
+
+  loadingData() {
+    return SizedBox(
+      width: 400,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: BouncingScrollPhysics(),
+        padding: EdgeInsets.only(top: 6),
+        itemCount: 6,
+        itemBuilder: (context, index) {
+          return loadingUserList();
+        },
+      ),
     );
   }
 
@@ -485,12 +557,13 @@ class _HomePageState extends State<HomePage> {
       children: [
         GestureDetector(
           onTap: () {
-            Navigator.pushNamed(context, '/detailprofile', arguments: user);
+            Navigator.pushNamed(context, '/detailprofile', arguments: user.id);
           },
           child: Container(
             margin: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             padding: EdgeInsets.all(10),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 listImages(user, loveColor),
                 SizedBox(width: 16),
@@ -528,10 +601,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   userPrices(UserProfile user) {
+    (user.profile["gaji"]);
+    final gaji = user.profile["gaji"];
+    final formattedGaji = NumberFormat.decimalPattern('vi_VN').format(gaji);
+
     return Padding(
       padding: const EdgeInsets.only(top: 2.0),
       child: Text(
-        'Rp. ${user.profile["gaji"]}',
+        'Rp. $formattedGaji',
         style: TextStyle(
           color: Color(0xFF080C11),
           fontSize: 11,
@@ -543,10 +620,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   SizedBox userDescriptions(UserProfile user) {
+    (user.profile["deripsi"]);
     return SizedBox(
       width: 150,
       child: Text(
-        limitText(user.profile["deskripsi"], 60),
+        limitText(user.profile["deskripsi"], 45),
         style: TextStyle(
           color: Color(0xFF828993),
           fontSize: 8,
@@ -557,7 +635,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String rattingNull(UserProfile user) {
+    if (user.profile["rating"] == null) {
+      return "0";
+    } else {
+      return user.profile["rating"].toString();
+    }
+  }
+
   Container userRatings(UserProfile user) {
+    ('${user.profile["lama_pengalaman_bekerja"]}');
     return Container(
       width: 110,
       child: Row(
@@ -572,7 +659,7 @@ class _HomePageState extends State<HomePage> {
               ),
               SizedBox(width: 2),
               Text(
-                '${user.profile["rating"]}',
+                rattingNull(user),
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 8,
@@ -629,6 +716,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Text userNames(UserProfile user) {
+    (user.profile["nama_lengkap"]);
     return Text(
       user.profile["nama_lengkap"],
       style: TextStyle(
@@ -641,6 +729,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Container userTypes(UserProfile user) {
+    (user.category["name"]);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: ShapeDecoration(
@@ -665,14 +754,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Container listImages(UserProfile user, Color loveColor) {
+    ("$serverPath${user.profile["foto_setengah_badan"]}");
     return Container(
       width: 150,
       height: 150,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         image: DecorationImage(
-          image: NetworkImage(
-                          "$serverPath${user.profile["foto_setengah_badan"]}"),
+          image:
+              NetworkImage("$serverPath${user.profile["foto_setengah_badan"]}"),
           fit: BoxFit.cover,
         ),
       ),
@@ -720,9 +810,24 @@ class _HomePageState extends State<HomePage> {
             itemBuilder: (BuildContext context, int index) {
               return GestureDetector(
                 onTap: () {
+                  print(filter);
                   setState(() {
                     selectedIndex = index;
                     selectedCategory = types[index];
+                    if (selectedCategory == 'ART') {
+                      filter = 'art';
+                    } else if (selectedCategory == 'Supir') {
+                      filter = 'supir';
+                    } else if (selectedCategory == 'Satpam') {
+                      filter = 'satpam';
+                    } else if (selectedCategory == 'Baby Sitter') {
+                      filter = 'babysitter';
+                    } else if (selectedCategory == 'PRT') {
+                      filter = 'prt';
+                    } else {
+                      filter = 'all';
+                    }
+                    _userProfileFuture = filterUserProfiles(filter);
                   });
                 },
                 child: Padding(
@@ -761,6 +866,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Row ownSaldo() {
+    final formattedSaldo = saldoFuture != null
+        ? NumberFormat.decimalPattern('vi_VN').format(saldoFuture).toString()
+        : '';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -774,15 +883,29 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         Expanded(
-          child: Text(
-            isAmountVisible ? '10.000.000' : '-',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          child: saldoFuture == null
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        color: Color.fromARGB(118, 231, 231, 231),
+                      ),
+                    ),
+                    Container(),
+                  ],
+                )
+              : Text(
+                  isAmountVisible ? formattedSaldo : '-',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
         ),
         IconButton(
             onPressed: () {
@@ -850,37 +973,42 @@ class _HomePageState extends State<HomePage> {
     return Flexible(
       flex: 0,
       fit: FlexFit.tight,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: ShapeDecoration(
-            color: Colors.white.withOpacity(0.15),
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                width: 1.5,
-                strokeAlign: BorderSide.strokeAlignCenter,
-                color: Colors.white,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushNamed(context, '/withdraw');
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: ShapeDecoration(
+              color: Colors.white.withOpacity(0.15),
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  width: 1.5,
+                  strokeAlign: BorderSide.strokeAlignCenter,
+                  color: Colors.white,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              )),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'images/Add.png',
+                width: 12,
+                height: 12,
               ),
-              borderRadius: BorderRadius.circular(20),
-            )),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'images/Add.png',
-              width: 12,
-              height: 12,
-            ),
-            SizedBox(width: 6),
-            Text(
-              'Tarik Tunai',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontFamily: 'Asap',
-                fontWeight: FontWeight.w400,
+              SizedBox(width: 6),
+              Text(
+                'Tarik Tunai',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontFamily: 'Asap',
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -977,21 +1105,21 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  double measureTextWidth(String text, TextStyle style) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: TextDirection.ltr,
-    )..layout();
+  // double measureTextWidth(String text, TextStyle style) {
+  //   final TextPainter textPainter = TextPainter(
+  //     text: TextSpan(text: text, style: style),
+  //     textDirection: TextDirection.ltr,
+  //   )..layout();
 
-    return textPainter.width;
-  }
+  //   return textPainter.width;
+  // }
 
-  double measureTextWidthNew(String text) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: text),
-      textDirection: TextDirection.ltr,
-    )..layout();
+  // double measureTextWidthNew(String text) {
+  //   final TextPainter textPainter = TextPainter(
+  //     text: TextSpan(text: text),
+  //     textDirection: TextDirection.ltr,
+  //   )..layout();
 
-    return textPainter.width;
-  }
+  //   return textPainter.width;
+  // }
 }

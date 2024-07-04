@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:prt/src/pencari_screens/regist/regist_pekerja_pengalaman.dart';
-import 'package:prt/src/pencari_screens/topup/pay_method_page.dart';
+import 'package:intl/intl.dart';
+import 'package:prt/src/mixins/thousand_formatter.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
 class TopUpPage extends StatefulWidget {
@@ -14,20 +14,21 @@ class TopUpPage extends StatefulWidget {
 }
 
 class TopUpPageState extends State<TopUpPage> {
-  String selectedPrice = '';
+  int? selectedPrice;
   bool isOverlayVisible = false;
-  List<String> prices = [
-    '100.000',
-    '500.000',
-    '1.000.000',
-    '1.500.000',
-    '3.000.000',
-    '3.500.000',
-    '4.000.000',
-    '4.500.000',
-    '5.000.000',
+  List<int> prices = [
+    100000,
+    500000,
+    1000000,
+    1500000,
+    3000000,
+    3500000,
+    4000000,
+    4500000,
+    5000000,
   ];
   List<bool> containerStates = List.generate(9, (index) => false);
+  TextEditingController topUpController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -39,18 +40,31 @@ class TopUpPageState extends State<TopUpPage> {
           width: deviceTypeTablet() ? 340 : screenWidth,
           child: Stack(
             children: [
-              Column(
-                children: [
-                  Stack(
-                    children: [
-                      back(context),
-                      title(),
-                    ],
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    isOverlayVisible = false;
+                  });
+                },
+                child: Opacity(
+                  opacity: isOverlayVisible ? 0.5 : 1.0,
+                  child: AbsorbPointer(
+                    absorbing: (isOverlayVisible) ? true : false,
+                    child: Column(
+                      children: [
+                        Stack(
+                          children: [
+                            back(context),
+                            title(),
+                          ],
+                        ),
+                        topUpBox(),
+                        SizedBox(height: 30),
+                        topUpButton(),
+                      ],
+                    ),
                   ),
-                  TopUpBox(),
-                  SizedBox(height: 30),
-                  TopUpButton(),
-                ],
+                ),
               ),
               if (isOverlayVisible) TopUpOverlay(context),
             ],
@@ -77,20 +91,27 @@ class TopUpPageState extends State<TopUpPage> {
     );
   }
 
-  TopUpButton() {
+  topUpButton() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: MaterialStateProperty.all<Size>(Size(320, 44)),
+        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
       ),
       onPressed: () {
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => PayMethod()));
+        print(selectedPrice);
+        if (selectedPrice == null) {
+          _showTopSnackbar(context, 'Isi nominal top up!');
+        } else if (selectedPrice! < 50000) {
+          _showTopSnackbar(context, 'Minimal Top Up Rp. 50.000');
+        } else {
+          Navigator.pushNamed(context, '/paymethod',
+              arguments: {'digitTopUp': selectedPrice});
+        }
       },
       child: Text(
         'Top Up',
@@ -104,7 +125,41 @@ class TopUpPageState extends State<TopUpPage> {
     );
   }
 
-  Padding TopUpBox() {
+  void _showTopSnackbar(BuildContext context, String text) {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 0,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            color: Color(0xFFFF2222), // Warna latar belakang
+            child: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    text,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlayState.insert(overlayEntry);
+
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
+  }
+
+  topUpBox() {
     return Padding(
       padding: const EdgeInsets.only(top: 38, left: 24, right: 24),
       child: Container(
@@ -135,6 +190,7 @@ class TopUpPageState extends State<TopUpPage> {
       onTap: () {
         setState(() {
           isOverlayVisible = true;
+          FocusScope.of(context).unfocus();
         });
       },
       child: Text(
@@ -171,9 +227,11 @@ class TopUpPageState extends State<TopUpPage> {
           ),
         ),
         SizedBox(
-          width: 150,
+          width: 140,
           child: TextField(
-            controller: TextEditingController(text: selectedPrice),
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.start,
+            readOnly: true,
             decoration: InputDecoration(
               hintText: 'Isi Nominal',
               border: InputBorder.none,
@@ -184,12 +242,22 @@ class TopUpPageState extends State<TopUpPage> {
               fontFamily: 'Inter',
               fontWeight: FontWeight.w700,
             ),
-            keyboardType: TextInputType.number,
+            controller: selectedPrice != null
+                ? TextEditingController(
+                    text: NumberFormat.decimalPattern('vi_VN')
+                        .format(selectedPrice)
+                        .toString())
+                : topUpController,
             inputFormatters: <TextInputFormatter>[
               FilteringTextInputFormatter.digitsOnly,
-              ThousandsFormatter()
+              NumberTextInputFormatter(),
             ],
-            enabled: !isOverlayVisible,
+            autofocus: true,
+            onChanged: (String? value) {
+              if (value != null && value.isNotEmpty) {
+                selectedPrice = int.tryParse(value.replaceAll('.', '')) ?? 0;
+              }
+            },
           ),
         ),
       ],
@@ -209,7 +277,7 @@ class TopUpPageState extends State<TopUpPage> {
     );
   }
 
-  Padding back(context) {
+  back(context) {
     return Padding(
       padding: const EdgeInsets.only(left: 24, top: 60),
       child: Row(
@@ -243,15 +311,20 @@ class TopUpPageState extends State<TopUpPage> {
       child: Container(
         height: 400,
         clipBehavior: Clip.antiAlias,
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
+        decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
             ),
-          ),
-        ),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.grey,
+                offset: Offset(0, 1),
+                blurRadius: 2.0,
+                spreadRadius: 0.0,
+              ),
+            ]),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
@@ -305,7 +378,8 @@ class TopUpPageState extends State<TopUpPage> {
                               ),
                             ),
                             Text(
-                              prices[index],
+                              NumberFormat.decimalPattern('vi_VN')
+                                  .format(prices[index]),
                               style: TextStyle(
                                 color: containerStates[index]
                                     ? Color(0xFF38800C)
@@ -353,7 +427,7 @@ class TopUpPageState extends State<TopUpPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(32),
             ),
-            primary: Color(0xFF38800C),
+            backgroundColor: Color(0xFF38800C),
             minimumSize: Size(300, 50),
           ),
         ),

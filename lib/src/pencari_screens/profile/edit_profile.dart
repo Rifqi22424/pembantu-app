@@ -2,8 +2,13 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:prt/src/api/fetch_user_data.dart';
+import 'package:prt/src/api/regist_pekerja_model.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
+import '../../../main.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -13,12 +18,38 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  UserProfile? userProfile;
+  late RegistPekerjaModel postService;
   final formKey = GlobalKey<FormState>();
   File? selectedHalfImg;
-  String namalengkap = '';
-  String alamatktp = '';
+  String gmail = '';
+  String name = '';
   String notelp = '';
   String alamat = '';
+  String gaji = '';
+  TextEditingController alamatGmailController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController notelpController = TextEditingController();
+  TextEditingController alamatController = TextEditingController();
+  TextEditingController gajiController = TextEditingController();
+
+  Future<void> fetchUserProfileData() async {
+    try {
+      UserProfile user = await fetchUserProfile();
+      setState(() {
+        userProfile = user;
+        if (userProfile != null) {
+          alamatGmailController.text = userProfile!.email;
+          nameController.text = userProfile!.profile["nama_lengkap"];
+          gajiController.text = userProfile!.profile["gaji"].toString();
+          alamatController.text = userProfile!.profile["alamat_sekarang"];
+          notelpController.text = userProfile!.profile["no_telp"];
+        }
+      });
+    } catch (e) {
+      print('Error fetching user profile: $e');
+    }
+  }
 
   void _pickHalfImg() async {
     final pickedImage =
@@ -32,42 +63,96 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    fetchUserProfileData();
+    postService = RegistPekerjaModel();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      body: ScrollConfiguration(
-        behavior: NoGlowBehavior(),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  title(),
-                  back(context),
-                ],
-              ),
-              SizedBox(height: 50),
-              Form(
-                key: formKey,
+      body: userProfile == null
+          ? Center(child: CircularProgressIndicator(color: Color(0xFF39810D)))
+          : Container(
+              height: screenHeight,
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Expanded(
                 child: Column(
                   children: [
-                    _editPhotoProfile(),
-                    SizedBox(height: 80),
-                    _gmail(),
-                    SizedBox(height: 20),
-                    _name(),
-                    SizedBox(height: 20),
-                    _alamat(),
-                    SizedBox(height: 20),
-                    _notelp(),
-                    SizedBox(height: 70),
-                    submitButton(),
+                    Stack(
+                      children: [
+                        title(),
+                        back(context),
+                      ],
+                    ),
+                    SizedBox(height: 50),
+                    Form(
+                      key: formKey,
+                      child: Expanded(
+                        child: Column(
+                          children: [
+                            _editPhotoProfile(),
+                            SizedBox(height: 80),
+                            _buildTextField(
+                              controller: alamatGmailController,
+                              label: 'Masukan Gmail',
+                            ),
+                            SizedBox(height: 20),
+                            _buildTextField(
+                              controller: nameController,
+                              label: 'Masukan Nama Lengkap',
+                            ),
+                            SizedBox(height: 20),
+                            _buildTextField(
+                              controller: alamatController,
+                              label: 'Alamat Sekarang',
+                            ),
+                            SizedBox(height: 20),
+                            _buildTextField(
+                              controller: notelpController,
+                              label: 'No. Telp',
+                              keyboardType: TextInputType.number,
+                            ),
+                            SizedBox(height: 20),
+                            _buildTextField(
+                              controller: gajiController,
+                              label: 'Gaji',
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                TextInputFormatter.withFunction(
+                                  (oldValue, newValue) {
+                                    final numericValue =
+                                        int.tryParse(newValue.text);
+                                    if (numericValue != null) {
+                                      final formattedValue =
+                                          NumberFormat.decimalPattern('vi_VN')
+                                              .format(numericValue);
+                                      return TextEditingValue(
+                                        text: formattedValue,
+                                        selection: TextSelection.collapsed(
+                                            offset: formattedValue.length),
+                                      );
+                                    }
+                                    return newValue;
+                                  },
+                                ),
+                              ],
+                            ),
+                            Spacer(),
+                            submitButton(),
+                            SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
@@ -88,7 +173,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     Container(
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                            image: AssetImage('images/Emily.jpg'),
+                            image: NetworkImage(
+                                '$serverPath${userProfile!.profile["foto_setengah_badan"]}'),
                             fit: BoxFit.cover,
                             colorFilter: ColorFilter.mode(
                                 Colors.black.withOpacity(0.5),
@@ -174,162 +260,76 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  _gmail() {
-    return Container(
-      width: 320,
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return TextFormField(
+      controller: controller,
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
       ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        isDense: true,
+        labelText: label,
+        border: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.blue, // Border color
+            width: 2.0, // Border width
+          ),
+          borderRadius: BorderRadius.circular(32),
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+        labelStyle: TextStyle(
+          color: Color(0xFF828993),
           fontSize: 12,
           fontFamily: 'Asap',
           fontWeight: FontWeight.w400,
+          height: 1.7,
         ),
-        decoration: InputDecoration(
-          hintText: 'Masukan Gmail',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          namalengkap = value!;
-        },
       ),
-    );
-  }
-
-  Widget _name() {
-    return Container(
-      width: 320,
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
-      ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
-          fontSize: 12,
-          fontFamily: 'Asap',
-          fontWeight: FontWeight.w400,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Masukan Nama Lengkap',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          alamatktp = value!;
-        },
-      ),
-    );
-  }
-
-  Widget _alamat() {
-    return Container(
-      width: 320,
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
-      ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
-          fontSize: 12,
-          fontFamily: 'Asap',
-          fontWeight: FontWeight.w400,
-        ),
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          hintText: 'No. Telp',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          notelp = value!;
-        },
-      ),
-    );
-  }
-
-  Widget _notelp() {
-    return Container(
-      width: 320,
-      height: 54,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.all(Radius.circular(32)),
-      ),
-      child: TextFormField(
-        style: TextStyle(
-          color: Color(0xFF080C11),
-          fontSize: 12,
-          fontFamily: 'Asap',
-          fontWeight: FontWeight.w400,
-        ),
-        decoration: InputDecoration(
-          hintText: 'Alamat Sekarang',
-          border: InputBorder.none,
-          contentPadding:
-              EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          hintStyle: TextStyle(
-            color: Color(0xFF828993),
-            fontSize: 12,
-            fontFamily: 'Asap',
-            fontWeight: FontWeight.w400,
-            height: 1.7,
-          ),
-        ),
-        onSaved: (String? value) {
-          alamat = value!;
-        },
-      ),
+      inputFormatters: inputFormatters,
     );
   }
 
   Widget submitButton() {
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(32),
           ),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: MaterialStateProperty.all<Size>(Size(320, 44)),
+        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 60)),
       ),
-      onPressed: () {
+      onPressed: () async {
         if (formKey.currentState!.validate()) {
           formKey.currentState!.save();
-          print('post $notelp ');
+          try {
+            bool photoSuccess;
+
+            if (selectedHalfImg != null) {
+              photoSuccess =
+                  await postService.updateProfilePhoto(selectedHalfImg!);
+            } else {
+              photoSuccess = false;
+            }
+            bool success =
+                await postService.updateProfileText(name, notelp, alamat, gaji);
+
+            if (success || photoSuccess) {
+              _showTopSnackbar(context, "Upload Berhasil", true);
+            }
+          } catch (e) {
+            _showTopSnackbar(context, e.toString(), false);
+          }
         }
       },
       child: Text(
@@ -342,5 +342,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ),
     );
+  }
+
+  void _showTopSnackbar(BuildContext context, String label, bool isTrueColor) {
+    OverlayState overlayState = Overlay.of(context);
+    OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 0,
+          width: MediaQuery.of(context).size.width,
+          child: Material(
+            color: isTrueColor ? Color(0xFF39810D) : Color(0xFFFF2222),
+            child: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    label,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlayState.insert(overlayEntry);
+
+    Future.delayed(Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
 }

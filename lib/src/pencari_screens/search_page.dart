@@ -1,37 +1,59 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:prt/main.dart';
 import 'package:prt/src/api/fetch_user_data.dart';
-import 'package:prt/src/provider/user_provider.dart';
+import 'package:prt/src/api/like_api.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/limit_text.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
 
+import '../widgets/loading_user_list.dart';
+
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  final bool searchByText;
+  const SearchPage({required this.searchByText, super.key});
 
   @override
   State<SearchPage> createState() => SearchPageState();
 }
 
 class SearchPageState extends State<SearchPage> {
+  final formKey = GlobalKey<FormState>();
   bool isFilterVisible = false;
   int? selectedUsia;
   int? selectedExp;
   String? selectedCity;
   String? selectedReligion;
-  String namalengkap = '';
+  String nominalMin = '';
   int selectedIndex = 0;
   String? selectedCategory;
   String searchText = '';
   final FocusNode _focusNode = FocusNode();
+  LikeApi likeApi = LikeApi();
+  TextEditingController searchController = TextEditingController();
+  TextEditingController nominalMinController = TextEditingController();
+  late Future<List<UserProfile>> _userProfileFuture =
+      searchUserProfiles(searchText);
 
+  @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 100), () {
-      FocusScope.of(context).requestFocus(_focusNode);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.searchByText) {
+        Future.delayed(Duration(milliseconds: 100), () {
+          FocusScope.of(context).requestFocus(_focusNode);
+        });
+      } else {
+        Future.delayed(Duration(seconds: 1), () {
+          setState(() {
+            isFilterVisible = true;
+          });
+        });
+      }
     });
   }
 
@@ -40,7 +62,7 @@ class SearchPageState extends State<SearchPage> {
     'ART',
     'Supir',
     'Satpam',
-    'Baby Sister',
+    'Baby Sitter',
     'PRT'
   ];
 
@@ -68,6 +90,21 @@ class SearchPageState extends State<SearchPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  loadingData() {
+    return SizedBox(
+      width: 400,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: BouncingScrollPhysics(),
+        padding: EdgeInsets.only(top: 6),
+        itemCount: 6,
+        itemBuilder: (context, index) {
+          return loadingUserList();
+        },
       ),
     );
   }
@@ -105,7 +142,7 @@ class SearchPageState extends State<SearchPage> {
 
   searchNFilter() {
     return Container(
-      width: 400,
+      width: 450,
       height: 50,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,7 +190,7 @@ class SearchPageState extends State<SearchPage> {
 
   Container searchBox() {
     return Container(
-      width: 280,
+      width: 380,
       height: 50,
       decoration: ShapeDecoration(
         color: Color(0xFFF5F5F5),
@@ -163,7 +200,7 @@ class SearchPageState extends State<SearchPage> {
       ),
       child: Focus(
         onFocusChange: (hasFocus) {
-          if (hasFocus) {
+          if (hasFocus && widget.searchByText) {
             FocusScope.of(context).requestFocus(_focusNode);
           }
         },
@@ -172,8 +209,10 @@ class SearchPageState extends State<SearchPage> {
           onChanged: (text) {
             setState(() {
               searchText = text;
+              _userProfileFuture = searchUserProfiles(searchText);
             });
           },
+          controller: searchController,
           decoration: InputDecoration(
             hintText: 'Search...',
             border: InputBorder.none,
@@ -187,7 +226,11 @@ class SearchPageState extends State<SearchPage> {
               height: 1.7,
             ),
             suffixIcon: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                setState(() {
+                  searchText = searchController.text;
+                });
+              },
               icon: Image.asset(
                 'images/search.png',
                 width: 20,
@@ -265,33 +308,41 @@ class SearchPageState extends State<SearchPage> {
   }
 
   submitFilter() {
-    return ElevatedButton(
-      style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20),
+      child: ElevatedButton(
+        style: ButtonStyle(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
           ),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+          minimumSize:
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
         ),
-        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize:
-            MaterialStateProperty.all<Size>(Size(double.maxFinite, 44)),
-      ),
-      onPressed: () {},
-      child: Text(
-        'Search',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
+        onPressed: () {
+          formKey.currentState!.validate();
+          formKey.currentState!.save();
+          print(nominalMin);
+          FocusScope.of(context).unfocus();
+        },
+        child: Text(
+          'Search',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
 
-  Container price() {
+  price() {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: EdgeInsets.only(top: 8, left: 20, right: 20),
       height: 50,
       decoration: BoxDecoration(
         color: Color(0xFFF5F5F5),
@@ -333,9 +384,30 @@ class SearchPageState extends State<SearchPage> {
                   height: 1.7,
                 ),
               ),
+              keyboardType: TextInputType.number,
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.digitsOnly,
+                TextInputFormatter.withFunction(
+                  (oldValue, newValue) {
+                    final numericValue = int.tryParse(newValue.text);
+                    if (numericValue != null) {
+                      final formattedValue =
+                          NumberFormat.decimalPattern('vi_VN')
+                              .format(numericValue);
+                      return TextEditingValue(
+                        text: formattedValue,
+                        selection: TextSelection.collapsed(
+                            offset: formattedValue.length),
+                      );
+                    }
+                    return newValue;
+                  },
+                ),
+              ],
               onSaved: (String? value) {
-                namalengkap = value!;
+                nominalMin = nominalMinController.text.replaceAll('.', '');
               },
+              controller: nominalMinController,
             ),
           ),
         ],
@@ -345,9 +417,9 @@ class SearchPageState extends State<SearchPage> {
 
   Container agama() {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: EdgeInsets.only(top: 8, right: 20),
       height: 50,
-      width: 170,
+      width: 220,
       decoration: BoxDecoration(
         color: Color(0xFFF5F5F5),
         borderRadius: BorderRadius.all(Radius.circular(32)),
@@ -397,9 +469,9 @@ class SearchPageState extends State<SearchPage> {
 
   kota() {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: EdgeInsets.only(top: 8, left: 20),
       height: 50,
-      width: 170,
+      width: 220,
       decoration: BoxDecoration(
         color: Color(0xFFF5F5F5),
         borderRadius: BorderRadius.all(Radius.circular(32)),
@@ -447,9 +519,9 @@ class SearchPageState extends State<SearchPage> {
 
   Container pengalaman() {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: EdgeInsets.only(top: 8, right: 20),
       height: 50,
-      width: 170,
+      width: 220,
       decoration: BoxDecoration(
         color: Color(0xFFF5F5F5),
         borderRadius: BorderRadius.all(Radius.circular(32)),
@@ -497,9 +569,9 @@ class SearchPageState extends State<SearchPage> {
 
   Container usia() {
     return Container(
-      margin: EdgeInsets.only(top: 8),
+      margin: EdgeInsets.only(top: 8, left: 20),
       height: 50,
-      width: 170,
+      width: 220,
       decoration: BoxDecoration(
         color: Color(0xFFF5F5F5),
         borderRadius: BorderRadius.all(Radius.circular(32)),
@@ -529,7 +601,7 @@ class SearchPageState extends State<SearchPage> {
               EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
           hintStyle: TextStyle(fontSize: 12),
         ),
-        value: selectedUsia, // Nilai yang terpilih
+        value: selectedUsia,
         items: List<DropdownMenuItem<int>>.generate(
           11,
           (index) {
@@ -548,41 +620,70 @@ class SearchPageState extends State<SearchPage> {
     );
   }
 
-  void _toggleUserLikedStatus(UserProfile user) {
-    final newIsLiked = !user.isLiked;
-    final userProvider = UserProvider(); // Create an instance
-    userProvider.updateUserLikedStatus(
-        user.profile["id"], newIsLiked); // Call the method on the instance
+  void _toggleUserLikedStatus(UserProfile user) async {
+    user.isLiked = !user.isLiked;
+    try {
+      bool like = await likeApi.likeUser(user.id);
+      if (like) {
+        print('like send');
+      } else {
+        print('like not send');
+      }
+    } catch (e) {
+      print(e);
+    }
+
+    setState(() {});
+  }
+
+  maintanance() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 100,
+        ),
+        Text("Tidak ada data"),
+      ],
+    );
+  }
+
+  dataIsEmpty() {
+    return Column(
+      children: [
+        SizedBox(height: 100),
+        Text("Tidak ada data"),
+      ],
+    );
   }
 
   buildUserList() {
     return FutureBuilder<List<UserProfile>>(
-      future: fetchUserProfiles(),
+      future: _userProfileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return loadingData();
         } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
+          return maintanance();
         } else {
           final usersFromAPI = snapshot.data;
           if (usersFromAPI == null || usersFromAPI.isEmpty) {
             return Text('Tidak ada data.');
           }
 
-            List<UserProfile> filteredUsers = [];
+          List<UserProfile> filteredUsers = [];
 
           if (selectedCategory == null) {
             filteredUsers = usersFromAPI;
           } else {
             filteredUsers = usersFromAPI.where((user) {
-              return user.category["name"] == selectedCategory;
+              print(user.category);
+              return user.category["name"] == selectedCategory!.toLowerCase();
             }).toList();
           }
 
           if (filteredUsers.isEmpty) {
             return Text("Tidak ada data");
           }
-
 
           return SizedBox(
             width: 400,
@@ -592,7 +693,7 @@ class SearchPageState extends State<SearchPage> {
               padding: EdgeInsets.only(top: 6),
               itemCount: filteredUsers.length,
               itemBuilder: (context, index) {
-                final user = usersFromAPI[index];
+                final user = filteredUsers[index];
                 return buildUserListItem(user);
               },
             ),
@@ -608,12 +709,13 @@ class SearchPageState extends State<SearchPage> {
       children: [
         GestureDetector(
           onTap: () {
-            Navigator.pushNamed(context, '/detailprofile', arguments: user);
+            Navigator.pushNamed(context, '/detailprofile', arguments: user.id);
           },
           child: Container(
             margin: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             padding: EdgeInsets.all(10),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 listImages(user, loveColor),
                 SizedBox(width: 16),
@@ -651,10 +753,13 @@ class SearchPageState extends State<SearchPage> {
   }
 
   userPrices(UserProfile user) {
+    final gaji = user.profile["gaji"];
+    final formattedGaji = NumberFormat.decimalPattern('vi_VN').format(gaji);
+
     return Padding(
       padding: const EdgeInsets.only(top: 2.0),
       child: Text(
-        'Rp. ${user.profile["gaji"]}',
+        'Rp. $formattedGaji',
         style: TextStyle(
           color: Color(0xFF080C11),
           fontSize: 11,
@@ -669,7 +774,7 @@ class SearchPageState extends State<SearchPage> {
     return SizedBox(
       width: 150,
       child: Text(
-        limitText(user.profile["deskripsi"], 60),
+        limitText(user.profile["deskripsi"], 45),
         style: TextStyle(
           color: Color(0xFF828993),
           fontSize: 8,
@@ -678,6 +783,14 @@ class SearchPageState extends State<SearchPage> {
         ),
       ),
     );
+  }
+
+  String rattingNull(UserProfile user) {
+    if (user.profile["rating"] == null) {
+      return "0";
+    } else {
+      return user.profile["rating"];
+    }
   }
 
   Container userRatings(UserProfile user) {
@@ -695,7 +808,7 @@ class SearchPageState extends State<SearchPage> {
               ),
               SizedBox(width: 2),
               Text(
-                '${user.profile["rating"]}',
+                rattingNull(user),
                 style: TextStyle(
                   color: Color(0xFF080C11),
                   fontSize: 8,
@@ -794,8 +907,8 @@ class SearchPageState extends State<SearchPage> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         image: DecorationImage(
-          image: NetworkImage(
-                          "$serverPath${user.profile["foto_setengah_badan"]}"),
+          image:
+              NetworkImage("$serverPath${user.profile["foto_setengah_badan"]}"),
           fit: BoxFit.cover,
         ),
       ),
@@ -827,14 +940,5 @@ class SearchPageState extends State<SearchPage> {
         ),
       ),
     );
-  }
-
-  double measureTextWidth(String text, TextStyle style) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    return textPainter.width;
   }
 }
