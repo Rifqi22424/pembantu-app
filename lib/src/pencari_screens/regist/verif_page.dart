@@ -1,6 +1,5 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:prt/src/api/auth_model.dart';
 import 'package:prt/src/widgets/verif_widget.dart';

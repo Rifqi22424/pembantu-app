@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:prt/src/api/auth_model.dart';
 import 'package:prt/src/database/shared_preferences.dart';
 import 'package:prt/src/mixins/validation_mixin.dart';
-import 'package:prt/src/widgets/button_widget.dart';
 import 'package:prt/src/widgets/get_device_type.dart';
 
 class RegistPage extends StatefulWidget {

@@ -7,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:prt/src/api/fetch_user_data.dart';
 import 'package:prt/src/api/regist_pekerja_model.dart';
-import 'package:prt/src/widgets/scroll_behavior.dart';
 import '../../../main.dart';
 
 class EditProfilePage extends StatefulWidget {
