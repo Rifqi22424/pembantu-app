@@ -152,6 +152,7 @@ class _LikedUsersPageState extends State<LikedUsersPage> {
             margin: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
             padding: EdgeInsets.all(10),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 listImages(user, loveColor),
                 SizedBox(width: 16),

@@ -15,12 +15,14 @@ import 'package:prt/src/pencari_screens/cash_flow_page.dart';
 import 'package:prt/src/pencari_screens/chat/chat_page.dart';
 import 'package:prt/src/pencari_screens/chat/incoming_video_call.dart';
 import 'package:prt/src/pencari_screens/chat/video_call.dart';
+import 'package:prt/src/pencari_screens/detail_announcement_page.dart';
+import 'package:prt/src/pencari_screens/forgot_password/forgot_password_page.dart';
 import 'package:prt/src/pencari_screens/home/detail_profile.dart';
 import 'package:prt/src/pencari_screens/home/main_page.dart';
 import 'package:prt/src/pencari_screens/liked_users_page.dart';
 import 'package:prt/src/pencari_screens/login_page.dart';
 import 'package:prt/src/pencari_screens/login_regist_page.dart';
-import 'package:prt/src/pencari_screens/notif_page.dart';
+import 'package:prt/src/pencari_screens/announcement_page.dart';
 import 'package:prt/src/pencari_screens/profile/edit_profile.dart';
 import 'package:prt/src/pencari_screens/profile/profile_page.dart';
 import 'package:prt/src/pencari_screens/regist/choose_page.dart';
@@ -86,7 +88,14 @@ class RouteGenerator {
           builder: (context) => DetailProfilePage(id: userId),
         );
       case '/notif':
-        return MaterialPageRoute(builder: (context) => NotifPage());
+        return MaterialPageRoute(builder: (context) => AnnouncementPage());
+      case '/detail_announcement':
+        final args = settings.arguments as Map<String, dynamic>;
+        final int id = args['id'];
+        return MaterialPageRoute(
+            builder: (context) => DetailAnnouncementPage(
+              id: id,
+            ));
       case '/likedusers':
         final List<UserProfile> userList =
             settings.arguments as List<UserProfile>;
@@ -168,7 +177,7 @@ class RouteGenerator {
             isRealUser: isRealUser,
           ),
         );
-        case '/chatReal':
+      case '/chatReal':
         // final Chat user = settings.arguments as Chat;
         // final bool isRealUser = settings.arguments as bool;
         final args = settings.arguments as Map<String, dynamic>;
@@ -225,6 +234,8 @@ class RouteGenerator {
             builder: (context) => MainPekerjaPage(index: 2));
       case '/schedules':
         return MaterialPageRoute(builder: (context) => SchedulesPage());
+      case '/forgotPassword':
+        return MaterialPageRoute(builder: (context) => ForgotPasswordPage());
     }
     return _errorRoute();
   }

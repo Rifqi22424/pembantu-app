@@ -76,7 +76,7 @@ class StrukTransferPage extends StatelessWidget {
 
   shareStruk() {
     return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 16),
+      padding: const EdgeInsets.only(top: 12, bottom: 16, left: 24, right: 24),
       child: ElevatedButton(
         style: ButtonStyle(
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
@@ -85,7 +85,7 @@ class StrukTransferPage extends StatelessWidget {
             ),
           ),
           backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-          minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
+          minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
         onPressed: () {
           // Navigator.of(context)

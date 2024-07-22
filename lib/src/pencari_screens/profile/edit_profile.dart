@@ -21,16 +21,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late RegistPekerjaModel postService;
   final formKey = GlobalKey<FormState>();
   File? selectedHalfImg;
-  String gmail = '';
+  // String gmail = '';
   String name = '';
   String notelp = '';
   String alamat = '';
-  String gaji = '';
-  TextEditingController alamatGmailController = TextEditingController();
+  // String gaji = '';
   TextEditingController nameController = TextEditingController();
   TextEditingController notelpController = TextEditingController();
   TextEditingController alamatController = TextEditingController();
-  TextEditingController gajiController = TextEditingController();
 
   Future<void> fetchUserProfileData() async {
     try {
@@ -38,9 +36,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() {
         userProfile = user;
         if (userProfile != null) {
-          alamatGmailController.text = userProfile!.email;
+          // alamatGmailController.text = userProfile!.email;
           nameController.text = userProfile!.profile["nama_lengkap"];
-          gajiController.text = userProfile!.profile["gaji"].toString();
+          // gajiController.text = userProfile!.profile["gaji"].toString();
           alamatController.text = userProfile!.profile["alamat_sekarang"];
           notelpController.text = userProfile!.profile["no_telp"];
         }
@@ -73,6 +71,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: userProfile == null
           ? Center(child: CircularProgressIndicator(color: Color(0xFF39810D)))
           : Container(
@@ -95,10 +94,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           children: [
                             _editPhotoProfile(),
                             SizedBox(height: 80),
-                            _buildTextField(
-                              controller: alamatGmailController,
-                              label: 'Masukan Gmail',
-                            ),
+                            // _buildTextField(
+                            //   controller: alamatGmailController,
+                            //   label: 'Masukan Gmail',
+                            // ),
                             SizedBox(height: 20),
                             _buildTextField(
                               controller: nameController,
@@ -115,32 +114,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               label: 'No. Telp',
                               keyboardType: TextInputType.number,
                             ),
-                            SizedBox(height: 20),
-                            _buildTextField(
-                              controller: gajiController,
-                              label: 'Gaji',
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                TextInputFormatter.withFunction(
-                                  (oldValue, newValue) {
-                                    final numericValue =
-                                        int.tryParse(newValue.text);
-                                    if (numericValue != null) {
-                                      final formattedValue =
-                                          NumberFormat.decimalPattern('vi_VN')
-                                              .format(numericValue);
-                                      return TextEditingValue(
-                                        text: formattedValue,
-                                        selection: TextSelection.collapsed(
-                                            offset: formattedValue.length),
-                                      );
-                                    }
-                                    return newValue;
-                                  },
-                                ),
-                              ],
-                            ),
+                            // SizedBox(height: 20),
+                            // _buildTextField(
+                            //   controller: gajiController,
+                            //   label: 'Gaji',
+                            //   keyboardType: TextInputType.number,
+                            //   inputFormatters: [
+                            //     FilteringTextInputFormatter.digitsOnly,
+                            //     TextInputFormatter.withFunction(
+                            //       (oldValue, newValue) {
+                            //         final numericValue =
+                            //             int.tryParse(newValue.text);
+                            //         if (numericValue != null) {
+                            //           final formattedValue =
+                            //               NumberFormat.decimalPattern('vi_VN')
+                            //                   .format(numericValue);
+                            //           return TextEditingValue(
+                            //             text: formattedValue,
+                            //             selection: TextSelection.collapsed(
+                            //                 offset: formattedValue.length),
+                            //           );
+                            //         }
+                            //         return newValue;
+                            //       },
+                            //     ),
+                            //   ],
+                            // ),
                             Spacer(),
                             submitButton(),
                             SizedBox(height: 20),
@@ -316,15 +315,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
             if (selectedHalfImg != null) {
               photoSuccess =
-                  await postService.updateProfilePhoto(selectedHalfImg!);
+                  await postService.editProfilePencariPhoto(selectedHalfImg!);
             } else {
               photoSuccess = false;
             }
-            bool success =
-                await postService.updateProfileText(name, notelp, alamat, gaji);
+            bool success = await postService.editProfilePencariText(
+                nameController.text,
+                notelpController.text,
+                alamatController.text);
 
             if (success || photoSuccess) {
               _showTopSnackbar(context, "Upload Berhasil", true);
+              Navigator.of(context).pop();
             }
           } catch (e) {
             _showTopSnackbar(context, e.toString(), false);
@@ -353,7 +355,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           top: 0,
           width: MediaQuery.of(context).size.width,
           child: Material(
-            color: isTrueColor ? Color(0xFF39810D) : Color(0xFFFF2222),
+            color: isTrueColor ? Colors.black : Color(0xFFFF2222),
             child: SafeArea(
               child: Center(
                 child: Padding(

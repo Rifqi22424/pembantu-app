@@ -360,73 +360,75 @@ class _PayMethodState extends State<PayMethod> {
   }
 
   button() {
-    return ElevatedButton(
-      style: ButtonStyle(
-        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+      child: ElevatedButton(
+        style: ButtonStyle(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
           ),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+          minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
-        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
-      ),
-      onPressed: () async {
-        print(selectedIndex);
-        if (selectedIndex == -1) {
-          _showTopSnackbar(
-              context, "Pilih metode pembayaran terlebih dahulu!", false);
-        } else {
-          int digitTopUp = widget.digitTopUp;
-          int bankIndex = methodList[selectedIndex].selectedIndex;
-          String bankImages = methodList[selectedIndex].imageUrl;
-          String bankNames = methodList[selectedIndex].nameBank;
-
-          print('$digitTopUp, $bankIndex, $bankImages, $bankNames');
-
-          try {
-            setState(() {
-              isLoading = true;
-            });
-            bool success = await digitalMoney.topup(digitTopUp, bankIndex);
-            if (success) {
-              Navigator.pushNamed(context, '/struktopup', arguments: {
-                'digitTopUp': digitTopUp,
-                'bankIndex': bankIndex,
-                'bankImages': bankImages,
-                'bankNames': bankNames,
+        onPressed: () async {
+          print(selectedIndex);
+          if (selectedIndex == -1) {
+            _showTopSnackbar(
+                context, "Pilih metode pembayaran terlebih dahulu!", false);
+          } else {
+            int digitTopUp = widget.digitTopUp;
+            int bankIndex = methodList[selectedIndex].selectedIndex;
+            String bankImages = methodList[selectedIndex].imageUrl;
+            String bankNames = methodList[selectedIndex].nameBank;
+      
+            print('$digitTopUp, $bankIndex, $bankImages, $bankNames');
+      
+            try {
+              setState(() {
+                isLoading = true;
               });
+              bool success = await digitalMoney.topup(digitTopUp, bankIndex);
+              if (success) {
+                Navigator.pushNamed(context, '/struktopup', arguments: {
+                  'digitTopUp': digitTopUp,
+                  'bankIndex': bankIndex,
+                  'bankImages': bankImages,
+                  'bankNames': bankNames,
+                });
+                setState(() {
+                  isLoading = false;
+                });
+              }
+            } catch (e) {
+              print(e);
+              _showTopSnackbar(
+                  context, e.toString().replaceFirst('Exception: ', ''), false);
               setState(() {
                 isLoading = false;
               });
             }
-          } catch (e) {
-            print(e);
-
-            _showTopSnackbar(
-                context, e.toString().replaceFirst('Exception: ', ''), false);
-            setState(() {
-              isLoading = false;
-            });
           }
-        }
-      },
-      child: isLoading
-          ? SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                color: Colors.white,
+        },
+        child: isLoading
+            ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                'Top Up Sekarang',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            )
-          : Text(
-              'Top Up Sekarang',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+      ),
     );
   }
 

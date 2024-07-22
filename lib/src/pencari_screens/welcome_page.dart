@@ -143,7 +143,7 @@ class _WelcomePageState extends State<WelcomePage>
             borderRadius: BorderRadius.circular(32),
           ),
           backgroundColor: Color(0xFF38800C),
-          minimumSize: Size(double.maxFinite, 44),
+          minimumSize: Size(double.maxFinite, 54),
         ),
         child: Text('Next', style: TextStyles.button),
       ),

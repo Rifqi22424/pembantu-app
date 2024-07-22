@@ -44,6 +44,7 @@ dependencies:
   flutter_dash: ^1.0.0
   flutter_image_compress: ^2.3.0
   flutter_local_notifications: ^16.2.0
+  flutter_markdown: ^0.7.3
   flutter_ringtone_player: ^3.2.0
   flutter_slidable: ^3.0.0
   fluttertoast: ^8.2.2

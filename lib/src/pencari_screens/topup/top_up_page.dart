@@ -92,34 +92,37 @@ class TopUpPageState extends State<TopUpPage> {
   }
 
   topUpButton() {
-    return ElevatedButton(
-      style: ButtonStyle(
-        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25),
+      child: ElevatedButton(
+        style: ButtonStyle(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(32),
+            ),
           ),
+          backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
+          minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
-        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
-      ),
-      onPressed: () {
-        print(selectedPrice);
-        if (selectedPrice == null) {
-          _showTopSnackbar(context, 'Isi nominal top up!');
-        } else if (selectedPrice! < 50000) {
-          _showTopSnackbar(context, 'Minimal Top Up Rp. 50.000');
-        } else {
-          Navigator.pushNamed(context, '/paymethod',
-              arguments: {'digitTopUp': selectedPrice});
-        }
-      },
-      child: Text(
-        'Top Up',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
+        onPressed: () {
+          print(selectedPrice);
+          if (selectedPrice == null) {
+            _showTopSnackbar(context, 'Isi nominal top up!');
+          } else if (selectedPrice! < 50000) {
+            _showTopSnackbar(context, 'Minimal Top Up Rp. 50.000');
+          } else {
+            Navigator.pushNamed(context, '/paymethod',
+                arguments: {'digitTopUp': selectedPrice});
+          }
+        },
+        child: Text(
+          'Top Up',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -407,7 +410,7 @@ class TopUpPageState extends State<TopUpPage> {
   Center _button(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 16),
+        padding: const EdgeInsets.only(top: 12, bottom: 16, left: 25, right: 25),
         child: ElevatedButton(
           onPressed: () {
             setState(() {
@@ -428,7 +431,7 @@ class TopUpPageState extends State<TopUpPage> {
               borderRadius: BorderRadius.circular(32),
             ),
             backgroundColor: Color(0xFF38800C),
-            minimumSize: Size(300, 50),
+            minimumSize: Size(double.maxFinite, 54),
           ),
         ),
       ),

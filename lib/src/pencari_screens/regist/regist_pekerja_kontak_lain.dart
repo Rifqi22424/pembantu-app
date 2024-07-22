@@ -398,7 +398,7 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain>
           ),
           backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
-              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
         onPressed: () async {
           formKey.currentState!.validate();

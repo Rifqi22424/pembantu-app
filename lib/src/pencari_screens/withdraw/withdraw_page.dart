@@ -287,7 +287,7 @@ class _WithDrawPagePageState extends State<WithDrawPage> {
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () async {
         print('$namaRek, $noRek, $selectedPrice, $selectedIndex');
@@ -853,7 +853,7 @@ class _WithDrawPagePageState extends State<WithDrawPage> {
   Center _button(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 16),
+        padding: const EdgeInsets.only(top: 12, bottom: 16, left: 24, right: 24),
         child: ElevatedButton(
           onPressed: () {
             setState(() {
@@ -866,7 +866,7 @@ class _WithDrawPagePageState extends State<WithDrawPage> {
               borderRadius: BorderRadius.circular(32),
             ),
             backgroundColor: Color(0xFF38800C),
-            minimumSize: Size(300, 50),
+            minimumSize: Size(double.maxFinite, 54),
           ),
         ),
       ),

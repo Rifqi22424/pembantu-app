@@ -145,7 +145,8 @@ class _TransferPageState extends State<TransferPage> {
   searchUser() {
     return Center(
       child: Container(
-        width: 320,
+        margin: EdgeInsets.symmetric(horizontal: 24),
+        // width: 320,
         height: 54,
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey),
@@ -183,10 +184,10 @@ class _TransferPageState extends State<TransferPage> {
   recommendUser() {
     return Center(
       child: Container(
-        margin: EdgeInsets.only(top: 12, bottom: 12),
+        margin: EdgeInsets.only(top: 12, bottom: 12, left: 24, right: 24),
         padding: EdgeInsets.only(left: 12, right: 12),
         height: 320,
-        width: 320,
+        // width: 320,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: Color(0xFFF6F6F6),
@@ -239,7 +240,7 @@ class _TransferPageState extends State<TransferPage> {
   transferButton() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 24.0),
+        padding: const EdgeInsets.only(bottom: 24.0, left: 24, right: 24),
         child: ElevatedButton(
           style: ButtonStyle(
             shape: WidgetStateProperty.all<RoundedRectangleBorder>(
@@ -248,7 +249,7 @@ class _TransferPageState extends State<TransferPage> {
               ),
             ),
             backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-            minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
+            minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
           ),
           onPressed: () {
             Navigator.pushNamed(context, '/nominaltransfer', arguments: {

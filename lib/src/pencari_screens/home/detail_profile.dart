@@ -304,8 +304,8 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
         children: [
           Container(
             margin: EdgeInsets.only(left: 6),
-            width: 40,
-            height: 40,
+            width: 46,
+            height: 46,
             padding: EdgeInsets.all(4),
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
@@ -793,7 +793,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(180, 50)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(180, 54)),
       ),
       onPressed: () {
         setState(() {
@@ -1069,32 +1069,30 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
             ),
           ],
         ),
-        child: IntrinsicHeight(
-          child: Container(
-            padding: EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                deleteButton(),
-                SizedBox(height: 22),
-                titleSchedule(),
-                SizedBox(height: 10),
-                descSchedule(),
-                SizedBox(height: 14),
-                dateText(),
-                SizedBox(height: 14),
-                listDates(),
-                SizedBox(height: 14),
-                timeText(),
-                SizedBox(height: 10),
-                listTimes(index),
-                SizedBox(height: 22),
-                submitSchedule(),
-                SizedBox(height: 14),
-                submitCostum(),
-              ],
-            ),
+        child: Container(
+          padding: EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              deleteButton(),
+              SizedBox(height: 22),
+              titleSchedule(),
+              SizedBox(height: 10),
+              descSchedule(),
+              SizedBox(height: 14),
+              dateText(),
+              SizedBox(height: 14),
+              listDates(),
+              SizedBox(height: 14),
+              timeText(),
+              SizedBox(height: 10),
+              listTimes(index),
+              SizedBox(height: 22),
+              submitSchedule(),
+              SizedBox(height: 14),
+              submitCostum(),
+            ],
           ),
         ),
       ),
@@ -1125,7 +1123,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () {
         setState(() {
@@ -1228,7 +1226,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () {
         if (selectedIndex != -1 && selectedTimeIndex != -1) {
@@ -1438,31 +1436,30 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
             ),
           ],
         ),
-        child: IntrinsicHeight(
-          child: Container(
-            padding: EdgeInsets.all(24),
-            width: 300,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                deleteLayout(),
-                SizedBox(height: 20),
-                titileCostumSchedule(),
-                SizedBox(height: 12),
-                descText(),
-                SizedBox(height: 32),
-                scheduleName(),
-                SizedBox(height: 16),
-                _timePickerButton(),
-                SizedBox(height: 16),
-                _datePickerButton(),
-                SizedBox(height: 32),
-                Expanded(
-                  child: submitScheduleCostum(),
-                ),
-              ],
-            ),
+        child: Container(
+          padding: EdgeInsets.all(24),
+          width: 300,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              deleteLayout(),
+              SizedBox(height: 20),
+              titileCostumSchedule(),
+              SizedBox(height: 12),
+              descText(),
+              SizedBox(height: 32),
+              scheduleName(),
+              SizedBox(height: 16),
+              _timePickerButton(),
+              SizedBox(height: 16),
+              _datePickerButton(),
+              SizedBox(height: 32),
+              // Expanded(
+              //   child: submitScheduleCostum(),
+              // ),
+              submitScheduleCostum(),
+            ],
           ),
         ),
       ),
@@ -1519,7 +1516,7 @@ class _DetailProfilePageState extends State<DetailProfilePage> {
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 80)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () {
         if (selectedDate != null && selectedTime != null) {

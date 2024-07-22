@@ -56,8 +56,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 SizedBox(height: 26),
                                 nameNGmailText(),
                                 SizedBox(height: 16),
-                                // editProfileButton(),
-                                SizedBox(height: 26),
+                                editProfileButton(),
+                                SizedBox(height: 16),
+                                // SizedBox(height: 26),
                                 // SizedBox(height: 76),
                                 ListView(
                                   shrinkWrap: true,
@@ -489,8 +490,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       SizedBox(height: 26),
                       nameNGmailTextDefault(),
                       SizedBox(height: 16),
-                      // editProfileButton(),
-                      // SizedBox(height: 76),
+                      editProfileButton(),
+                      SizedBox(height: 16),
                       ListView(
                         shrinkWrap: true,
                         children: [
@@ -532,13 +533,21 @@ class _ProfilePageState extends State<ProfilePage> {
                           buildListTile(
                             iconPath: 'images/logoutSign.png',
                             title: 'Log Out',
-                            onTap: () async {
-                              await saveTokenToSharedPreferences('deleted');
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => LoginPage()),
-                                (Route<dynamic> route) => false,
+                            // onTap: () async {
+                            //   await saveTokenToSharedPreferences('deleted');
+                            //   Navigator.pushAndRemoveUntil(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //         builder: (context) => LoginPage()),
+                            //     (Route<dynamic> route) => false,
+                            //   );
+                            // },
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return overlayScheduleSuccess(context);
+                                },
                               );
                             },
                           ),
@@ -550,7 +559,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                 ),
-                approveAcc(),
+                // approveAcc(),
               ],
             ),
           ),
@@ -593,8 +602,7 @@ class _ProfilePageState extends State<ProfilePage> {
         minimumSize: WidgetStateProperty.all<Size>(Size(180, 50)),
       ),
       onPressed: () {
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => EditProfilePage()));
+        Navigator.of(context).pushNamed('/editprofile');
       },
       child: Text(
         'Edit Profile',
@@ -611,17 +619,17 @@ class _ProfilePageState extends State<ProfilePage> {
   Column nameNGmailText() {
     return Column(
       children: [
-        // Text(
-        //   userProfile!.profile["nama_lengkap"],
-        //   textAlign: TextAlign.center,
-        //   style: TextStyle(
-        //     color: Color(0xFF080C11),
-        //     fontSize: 14,
-        //     fontFamily: 'Asap',
-        //     fontWeight: FontWeight.w600,
-        //   ),
-        // ),
-        // SizedBox(height: 6),
+        Text(
+          userProfile!.profile["nama_lengkap"],
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF080C11),
+            fontSize: 14,
+            fontFamily: 'Asap',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: 6),
         Text(
           userProfile!.email,
           textAlign: TextAlign.center,
@@ -629,7 +637,7 @@ class _ProfilePageState extends State<ProfilePage> {
             color: Color(0xFF080C11),
             fontSize: 14,
             fontFamily: 'Asap',
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ],

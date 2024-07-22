@@ -37,7 +37,7 @@ class _LoginPageState extends State<LoginPage> with ValidationMixin {
       body: Center(
         child: Container(
           width: deviceTypeTablet() ? 340 : screenWidth,
-          padding: EdgeInsets.symmetric(horizontal: 25),
+          padding: EdgeInsets.symmetric(horizontal: 24),
           height: screenHeight,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -121,12 +121,13 @@ class _LoginPageState extends State<LoginPage> with ValidationMixin {
       alignment: Alignment.centerRight,
       child: InkWell(
         onTap: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return overlayUnderMaintanance(context);
-            },
-          );
+          // showDialog(
+          //   context: context,
+          //   builder: (BuildContext context) {
+          //     return overlayUnderMaintanance(context);
+          //   },
+          // );
+          Navigator.pushNamed(context, '/forgotPassword');
           print("tapped");
         },
         child: Text(
@@ -405,7 +406,7 @@ class _LoginPageState extends State<LoginPage> with ValidationMixin {
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () async {
         String? deviceToken = await getDeviceTokenFromSharedPreferences();
@@ -427,6 +428,7 @@ class _LoginPageState extends State<LoginPage> with ValidationMixin {
                 final int id = data['id'];
                 final String token = data['token'];
                 final String role = data['role'];
+                print(role);
 
                 await saveIdToSharedPreferences(id);
                 await FirebaseNotifAPI().putToken(deviceToken!);

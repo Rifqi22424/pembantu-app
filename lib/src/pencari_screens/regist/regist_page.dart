@@ -16,11 +16,17 @@ class RegistPage extends StatefulWidget {
 
 class _RegistPageState extends State<RegistPage> with ValidationMixin {
   final Auth authService = Auth();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  // final TextEditingController emailController = TextEditingController();
+  // final TextEditingController phoneController = TextEditingController();
+  // final TextEditingController passwordController = TextEditingController();
+  // final TextEditingController passwordConfirmController =
+  //     TextEditingController();
+
+  final TextEditingController emailController = TextEditingController(text: "2@gmail.com");
+  final TextEditingController phoneController = TextEditingController(text: "085721050709");
+  final TextEditingController passwordController = TextEditingController(text: "password");
   final TextEditingController passwordConfirmController =
-      TextEditingController();
+      TextEditingController(text: "password");
 
   final formKey = GlobalKey<FormState>();
   bool isPasswordVisible = false;
@@ -73,7 +79,7 @@ class _RegistPageState extends State<RegistPage> with ValidationMixin {
                       SizedBox(height: 12),
                       // (passwordErr) ? passwordError() : SizedBox(height: 12),
                       confirmPassField(),
-                      SizedBox(height: 12),
+                      // SizedBox(height: 12),
                       // (confirmPasswordErr)
                       // ? confirmPasswordError()
                       // : SizedBox(height: 20),
@@ -83,6 +89,7 @@ class _RegistPageState extends State<RegistPage> with ValidationMixin {
                       //       await pushToApi();
                       //     },
                       //     label: "Sign Up"),
+                                        SizedBox(height: screenHeight * 0.02),
                       submitButton(),
                       Spacer(),
                       signupWith(),
@@ -263,6 +270,7 @@ class _RegistPageState extends State<RegistPage> with ValidationMixin {
           flex: 2,
           fit: FlexFit.tight,
           child: InkWell(
+            borderRadius: BorderRadius.circular(32),
             onTap: () {
               showDialog(
                 context: context,
@@ -311,6 +319,7 @@ class _RegistPageState extends State<RegistPage> with ValidationMixin {
           flex: 2,
           fit: FlexFit.tight,
           child: InkWell(
+            borderRadius: BorderRadius.circular(32),
             onTap: () {
               showDialog(
                 context: context,
@@ -573,7 +582,7 @@ class _RegistPageState extends State<RegistPage> with ValidationMixin {
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () async {
         validation();

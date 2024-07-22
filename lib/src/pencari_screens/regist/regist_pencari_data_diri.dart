@@ -29,13 +29,23 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
   bool alamatErr = false;
   bool noTelpErr = false;
 
-  String noktp = '';
-  String alamat = '';
-  String notelp = '';
-  String? selectedUsia;
+  // String noktp = '';
+  // String namaLengkap = '';
+  // String alamat = '';
+  // String notelp = '';
+  // String? selectedUsia;
+  // List<String> usiaOptions =
+  //     List.generate(33, (index) => (index + 18).toString());
+  // String? selectedStatus;
+
+  String noktp = '1234567890123456';
+  String namaLengkap = 'rifqi m';
+  String alamat = 'sukabumi';
+  String notelp = '0857210404298';
+  String selectedUsia = "20";
   List<String> usiaOptions =
       List.generate(33, (index) => (index + 18).toString());
-  String? selectedStatus;
+  String selectedStatus = "1";
   File? selectedKTPImg;
   File? selectedHalfImg;
 
@@ -81,6 +91,8 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
                         _noKTP(),
                         SizedBox(height: 16),
                         // (ktpErr) ? ktpError() : SizedBox(height: 16),
+                        _namaLengkap(),
+                        SizedBox(height: 16),
                         _alamat(),
                         SizedBox(height: 16),
                         // (alamatErr) ? alamatError() : SizedBox(height: 16),
@@ -151,6 +163,7 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
 
   Widget _noKTP() {
     return TextFormField(
+      initialValue: noktp,
       validator: validateNoKtp,
       style: TextStyle(
         color: Color(0xFF080C11),
@@ -251,9 +264,44 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
     );
   }
 
+  Widget _namaLengkap() {
+    return TextFormField(
+      validator: validateName,
+      initialValue: namaLengkap,
+      decoration: InputDecoration(
+        labelText: 'Nama Lengkap',
+        border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.blue, // Warna border
+              width: 2.0, // Lebar border
+            ),
+            borderRadius: BorderRadius.circular(32)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        labelStyle: TextStyle(
+          color: Color(0xFF828993),
+          fontSize: 12,
+          fontFamily: 'Asap',
+          fontWeight: FontWeight.w400,
+          height: 1.71,
+        ),
+      ),
+      style: TextStyle(
+        color: Color(0xFF080C11),
+        fontSize: 12,
+        fontFamily: 'Asap',
+        fontWeight: FontWeight.w400,
+        height: 1.4,
+      ),
+      onSaved: (String? value) {
+        namaLengkap = value!;
+      },
+    );
+  }
+
   Widget _alamat() {
     return TextFormField(
       validator: validateAlamat,
+      initialValue: alamat,
       decoration: InputDecoration(
         labelText: 'Alamat Sekarang',
         border: OutlineInputBorder(
@@ -287,6 +335,7 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
   Widget _noTelp() {
     return TextFormField(
       validator: validatePhone,
+      initialValue: notelp,
       style: TextStyle(
         color: Color(0xFF080C11),
         fontSize: 12,
@@ -427,7 +476,7 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
       ],
       onChanged: (String? newValue) {
         setState(() {
-          selectedStatus = newValue;
+          selectedStatus = newValue!;
         });
       },
     );
@@ -624,7 +673,7 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
           ),
           backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
-              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
         onPressed: () async {
           formKey.currentState!.validate();
@@ -644,12 +693,12 @@ class _RegistPencariDataDiriState extends State<RegistPencariDataDiri>
                   compressedKTPImg, compressedHalfImg);
 
               bool success = await pencariRegist.registerPencariText(
+                namaLengkap,
                 noktp,
                 alamat,
                 notelp,
-                '10000',
                 selectedUsia!,
-                selectedStatus!,
+                selectedStatus!
               );
               // print(success);
               // print(photoSuccess);

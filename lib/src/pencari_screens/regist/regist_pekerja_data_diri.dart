@@ -737,7 +737,7 @@ class _RegistPekerjaDataDiriState extends State<RegistPekerjaDataDiri>
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () async {
         formKey.currentState!.validate();
@@ -778,28 +778,31 @@ class _RegistPekerjaDataDiriState extends State<RegistPekerjaDataDiri>
             }
           } catch (e) {
             print('Error: $e');
-            showTopSnackbar(context, 'Sedang dalam maintanance');
+            showTopSnackbar(
+                context, e.toString().replaceFirst('Exception: ', ''));
             setState(() {
               isLoading = false;
             });
           }
         }
       },
-      child: isLoading? SizedBox(
+      child: isLoading
+          ? SizedBox(
               height: 20,
               width: 20,
               child: CircularProgressIndicator(
                 color: Colors.white,
               ),
-            ): Text(
-        'Selanjutnya',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Asap',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+            )
+          : Text(
+              'Selanjutnya',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontFamily: 'Asap',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
     );
   }
 

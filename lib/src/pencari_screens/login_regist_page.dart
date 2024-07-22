@@ -142,7 +142,7 @@ class _LoginRegistPageState extends State<LoginRegistPage>
           ),
           backgroundColor: WidgetStateProperty.all<Color>(Color(0xFFF5F5F5)),
           minimumSize:
-              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44))),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 54))),
       child: Text('Sign Up', style: TextStyles.greyButton),
     ));
   }
@@ -161,7 +161,7 @@ class _LoginRegistPageState extends State<LoginRegistPage>
           ),
           backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
-              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44))),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 54))),
       child: Text('Login', style: TextStyles.button),
     ));
   }

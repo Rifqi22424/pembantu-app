@@ -28,35 +28,38 @@ class _VerifPageState extends State<VerifPage> {
   @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor:
-          _isVerifSuccess ? Colors.white.withOpacity(0.8) : Colors.white,
-      body: Stack(
-        children: [
-          Center(
-            child: Container(
-              width: 380,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: screenHeight * 0.12),
-                  TopText(),
-                  SizedBox(height: 30),
-                  VerifCodeInput(
-                    onVerificationSuccess: () {
-                      _handleVerificationSuccess();
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  ResendCode(),
-                ],
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor:
+            _isVerifSuccess ? Colors.white.withOpacity(0.8) : Colors.white,
+        body: Stack(
+          children: [
+            Center(
+              child: Container(
+                width: 380,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: screenHeight * 0.12),
+                    TopText(),
+                    SizedBox(height: 30),
+                    VerifCodeInput(
+                      onVerificationSuccess: () {
+                        _handleVerificationSuccess();
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    ResendCode(),
+                  ],
+                ),
               ),
             ),
-          ),
-          if (_isVerifSuccess) overlaySuccessVerif(),
-        ],
+            if (_isVerifSuccess) overlaySuccessVerif(),
+          ],
+        ),
       ),
     );
   }

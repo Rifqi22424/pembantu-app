@@ -55,7 +55,7 @@ class FirebaseNotifAPI {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception('gagal mnegirim data ${response.statusCode}');
+      throw Exception('gagal mnegirim data ${response.body}');
     }
   }
 }

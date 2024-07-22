@@ -280,7 +280,7 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
 
   transferButton() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
+      padding: const EdgeInsets.only(bottom: 24.0, left: 24, right: 24),
       child: ElevatedButton(
         style: ButtonStyle(
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
@@ -289,7 +289,7 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
             ),
           ),
           backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-          minimumSize: WidgetStateProperty.all<Size>(Size(320, 44)),
+          minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
         onPressed: () async {
           print(selectedPrice);
@@ -592,7 +592,7 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
   Center _button(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 16),
+        padding: const EdgeInsets.only(top: 12, bottom: 16, left: 24, right: 24),
         child: ElevatedButton(
           onPressed: () {
             setState(() {
@@ -605,7 +605,7 @@ class _NominalTransferPageState extends State<NominalTransferPage> {
               borderRadius: BorderRadius.circular(32),
             ),
             backgroundColor: Color(0xFF38800C),
-            minimumSize: Size(300, 50),
+            minimumSize: Size(double.maxFinite, 54),
           ),
         ),
       ),

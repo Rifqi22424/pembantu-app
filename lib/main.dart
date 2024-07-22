@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:prt/firebase_options.dart';
 import 'package:prt/src/api/firebase_api.dart';
+import 'package:prt/src/provider/announcement_provider.dart';
 import 'package:prt/src/provider/user_provider.dart';
 import 'src/app.dart';
 import 'package:provider/provider.dart';
 
-const serverPath = "https://angle-app.mangcoding.com";
+const serverPath = "http://192.168.1.13:8080";
+// const serverPath = "https://angle-app.mangcoding.com";
 
 String? sharedToken;
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -35,17 +37,25 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandlerTry);
   await FirebaseApi().initNotification();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => UserProvider(),
-      child: App(),
-    ),
-  );
+      // ChangeNotifierProvider(
+      //   create: (context) => UserProvider(),
+      //   child: App(),
+      // ),
+      MultiProvider(
+    providers: [
+      ChangeNotifierProvider<UserProvider>(create: (context) => UserProvider()),
+      ChangeNotifierProvider<AnnouncementProvider>(
+        create: (context) => AnnouncementProvider(),
+      ),
+    ],
+    child: App(),
+  ));
 }
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandlerTry(
     RemoteMessage message) async {
-await Firebase.initializeApp();
+  await Firebase.initializeApp();
   String? title = message.data['title'];
   String? body = message.data['body'];
   AwesomeNotifications().createNotification(

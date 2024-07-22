@@ -120,6 +120,27 @@ class Auth {
           'Gagal menyimpan token. Kode Status: ${response.statusCode}');
     }
   }
+
+  Future<bool> forgotPassword(String gmail) async {
+  final response = await http.post(
+      Uri.parse('$serverPath/api/forgot-password'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      body: jsonEncode(<String, String>{
+        'email': gmail,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      final responseJson = jsonDecode(response.body);
+      print(responseJson);
+      throw Exception(responseJson['data']);
+    }
+  }
 }
 
 class VideoCall {

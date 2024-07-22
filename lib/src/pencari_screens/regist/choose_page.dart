@@ -29,27 +29,30 @@ class _ChoosePageState extends State<ChoosePage> {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Container(
-          width: deviceTypeTablet() ? 340 : screenWidth,
-          height: screenHeight,
-          padding: EdgeInsets.symmetric(horizontal: 25),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: screenHeight * 0.08),
-              TopText(),
-              SizedBox(height: 40),
-              BoxPekerja(context),
-              SizedBox(height: 12),
-              BoxPencari(context),
-              Spacer(),
-              SubmitButton(),
-            ],
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Container(
+            width: deviceTypeTablet() ? 340 : screenWidth,
+            height: screenHeight,
+            padding: EdgeInsets.symmetric(horizontal: 25),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: screenHeight * 0.08),
+                TopText(),
+                SizedBox(height: 40),
+                BoxPekerja(context),
+                SizedBox(height: 12),
+                BoxPencari(context),
+                Spacer(),
+                SubmitButton(),
+              ],
+            ),
           ),
         ),
       ),
@@ -200,7 +203,7 @@ class _ChoosePageState extends State<ChoosePage> {
           ),
           backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
           minimumSize:
-              WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+              WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
         onPressed: () async {
           print(role);

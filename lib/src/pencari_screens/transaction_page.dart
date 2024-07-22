@@ -556,9 +556,9 @@ class _TransactionPageState extends State<TransactionPage> {
       return 'Melakukan Top Up';
     } else if (transaction.transactionType == 'transfer') {
       if (isIncrease) {
-        return 'Uang Masuk dari ${transaction.receiverId}';
+        return 'Uang Masuk dari ${transaction.namaLengkap}';
       } else {
-        return 'Uang Keluar ke ${transaction.receiverId}';
+        return 'Uang Keluar ke ${transaction.namaLengkap}';
       }
     } else {
       return 'Melakukan Tarik Tunai';

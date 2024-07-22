@@ -15,6 +15,8 @@ import 'package:prt/src/widgets/get_device_type.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
 import 'package:path/path.dart' as path;
 
+import '../login_page.dart';
+
 class RegistPekerjaPengalaman extends StatefulWidget {
   const RegistPekerjaPengalaman({super.key});
 
@@ -1122,7 +1124,7 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman>
           ),
         ),
         backgroundColor: WidgetStateProperty.all<Color>(Color(0xFF38800C)),
-        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 44)),
+        minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () async {
         print(deskripsi);
@@ -1169,7 +1171,12 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman>
               compressedSertifImg,
             );
             if (success && successToo) {
-              Navigator.pushNamed(context, '/login');
+              // Navigator.pushNamed(context, '/login');
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+                (Route<dynamic> route) => false,
+              );
               _showTopSnackbar(context, "Data berhasil tersimpan", true);
 
               setState(() {

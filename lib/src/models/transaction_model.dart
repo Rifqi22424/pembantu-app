@@ -8,6 +8,7 @@ class Transaction {
   final int senderId;
   final String orderId;
   final int statusPembayaran;
+  final String namaLengkap;
 
   Transaction({
     required this.id,
@@ -19,6 +20,7 @@ class Transaction {
     required this.senderId,
     required this.orderId,
     required this.statusPembayaran,
+    required this.namaLengkap,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class Transaction {
       senderId: json['sender_id'] as int,
       orderId: json['order_id'] as String,
       statusPembayaran: json['status_pembayaran'] as int,
+      namaLengkap: json['nama_lengkap'] as String,
     );
   }
 }

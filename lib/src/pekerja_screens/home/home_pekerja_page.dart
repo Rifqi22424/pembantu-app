@@ -219,30 +219,30 @@ class _HomePekerjaPageState extends State<HomePekerjaPage>
                     ),
                   ],
                 )
-              else if (selectedIndex == 0)
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blue.withOpacity(0.1),
-                  ),
-                  child: IconButton(
-                    onPressed: () {
-                      FirebaseNotifAPI().sendNotification(
-                          interview.deviceToken,
-                          userProfile!.profile['nama_lengkap'],
-                          interview.channelName,
-                          interview.channelToken);
-                      Navigator.pushNamed(context, '/videocall', arguments: {
-                        'channel': interview.channelName,
-                        'token': interview.channelToken,
-                      });
-                    },
-                    icon: Icon(
-                      Icons.camera_indoor_rounded,
-                      color: Colors.blue,
-                    ),
-                  ),
-                )
+              // else if (selectedIndex == 0)
+              //   Container(
+              //     decoration: BoxDecoration(
+              //       shape: BoxShape.circle,
+              //       color: Colors.blue.withOpacity(0.1),
+              //     ),
+              //     child: IconButton(
+              //       onPressed: () {
+              //         FirebaseNotifAPI().sendNotification(
+              //             interview.deviceToken,
+              //             userProfile!.profile['nama_lengkap'],
+              //             interview.channelName,
+              //             interview.channelToken);
+              //         Navigator.pushNamed(context, '/videocall', arguments: {
+              //           'channel': interview.channelName,
+              //           'token': interview.channelToken,
+              //         });
+              //       },
+              //       icon: Icon(
+              //         Icons.camera_indoor_rounded,
+              //         color: Colors.blue,
+              //       ),
+              //     ),
+              //   )
               else
                 Container(),
             ],

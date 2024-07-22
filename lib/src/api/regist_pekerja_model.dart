@@ -53,6 +53,7 @@ class RegistPekerjaModel {
       Uri.parse('$serverPath/api/profiles/step-2/${userId.toString()}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json'
       },
       body: jsonEncode(requestData),
     );
@@ -60,7 +61,9 @@ class RegistPekerjaModel {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception(response.statusCode);
+      final responseJson = jsonDecode(response.body);
+      print(responseJson);
+      throw Exception(responseJson['message']);
     }
   }
 
@@ -86,6 +89,7 @@ class RegistPekerjaModel {
       Uri.parse('$serverPath/api/profiles/step-3/${userId.toString()}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json'
       },
       body: jsonEncode(requestData),
     );
@@ -93,7 +97,9 @@ class RegistPekerjaModel {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception(response.statusCode);
+      final responseJson = jsonDecode(response.body);
+      print(responseJson);
+      throw Exception(responseJson['message']);
     }
   }
 
@@ -115,6 +121,7 @@ class RegistPekerjaModel {
       Uri.parse('$serverPath/api/profiles/step-4/${userId.toString()}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json'
       },
       body: jsonEncode(requestData),
     );
@@ -122,7 +129,9 @@ class RegistPekerjaModel {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception(response.statusCode);
+      final responseJson = jsonDecode(response.body);
+      print(responseJson);
+      throw Exception(responseJson['message']);
     }
   }
 
@@ -335,7 +344,39 @@ class RegistPekerjaModel {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception(response.statusCode);
+      final responseJson = jsonDecode(response.body);
+      print(responseJson);
+      throw Exception(responseJson['message']);
+    }
+  }
+
+  Future<bool> editProfilePencariText(
+    String name,
+    String notelp,
+    String alamat,
+  ) async {
+    final Map<String, dynamic> requestData = {
+      'nama_lengkap': name,
+      'alamat_sekarang': alamat,
+      'no_telp': notelp,
+    };
+
+    int? userId = await getIdFromSharedPreferences();
+    final response = await http.put(
+      Uri.parse('$serverPath/api/profiles/pencari/${userId.toString()}'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      body: jsonEncode(requestData),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      final responseJson = jsonDecode(response.body);
+      print(responseJson);
+      throw Exception(responseJson['message']);
     }
   }
 
@@ -371,19 +412,51 @@ class RegistPekerjaModel {
     }
   }
 
+  Future<bool> editProfilePencariPhoto(
+    File selectedHalfImg,
+  ) async {
+    final dio = Dio();
+
+    final formData = FormData.fromMap({
+      'foto_setengah_badan': await MultipartFile.fromFile(selectedHalfImg.path,
+          filename: 'half_image.jpg', contentType: MediaType('image', 'jpeg')),
+    });
+
+    try {
+      int? userId = await getIdFromSharedPreferences();
+      print(userId);
+      final response = await dio.post(
+        '$serverPath/api/profiles/update-photo-profile/${userId.toString()}',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Image error');
+      }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
+      throw Exception('Image error');
+    }
+  }
+
   Future<bool> registerPencariText(
+    String namaLengkap,
     String noKtp,
     String alamatSekarang,
     String noTelp,
-    String gaji,
     String usia,
     String statusMenikah,
   ) async {
     final Map<String, dynamic> requestData = {
+      'nama_lengkap': namaLengkap,
       'no_ktp': noKtp,
       'alamat_sekarang': alamatSekarang,
       'no_telp': noTelp,
-      'gaji': gaji,
       'usia': usia,
       'status_menikah': statusMenikah,
     };
@@ -393,6 +466,7 @@ class RegistPekerjaModel {
       Uri.parse('$serverPath/api/profiles/update-pencari/${userId.toString()}'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+        'Accept': 'application/json'
       },
       body: jsonEncode(requestData),
     );

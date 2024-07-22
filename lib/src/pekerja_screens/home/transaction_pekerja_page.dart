@@ -26,12 +26,18 @@ class _TransactionPekerjaPageState extends State<TransactionPekerjaPage> {
 
   String selectedUser = '';
   CUser? selectedIndex;
+  int? saldoFuture;
 
   @override
   void initState() {
     super.initState();
     _fetchTransaction = DigitalMoney().fetchData();
     initializeUserId();
+    fetchOwnSaldo().then((saldo) {
+      setState(() {
+        saldoFuture = saldo;
+      });
+    });
   }
 
   Future<void> initializeUserId() async {
@@ -213,9 +219,13 @@ class _TransactionPekerjaPageState extends State<TransactionPekerjaPage> {
   }
 
   Expanded saldoOwn() {
+        final formattedSaldo = saldoFuture != null
+        ? NumberFormat.decimalPattern('vi_VN').format(saldoFuture).toString()
+        : '';
+
     return Expanded(
       child: Text(
-        isAmountVisible ? '10.000.000' : '-',
+        isAmountVisible ? formattedSaldo : '-',
         style: TextStyle(
           color: Colors.white,
           fontSize: 20,

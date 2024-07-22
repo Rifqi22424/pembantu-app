@@ -119,6 +119,7 @@ loadingUserProfile() {
               margin: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               padding: EdgeInsets.all(10),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     height: 150,
@@ -209,6 +210,7 @@ loadingUserProfile() {
               margin: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               padding: EdgeInsets.all(10),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     height: 150,
