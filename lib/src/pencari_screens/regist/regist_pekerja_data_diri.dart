@@ -441,6 +441,7 @@ class _RegistPekerjaDataDiriState extends State<RegistPekerjaDataDiri>
         if (newValue != null) {
           setState(() {
             selectedKecamatan = newValue;
+            print(selectedKecamatan);
           });
         }
       },
@@ -740,52 +741,83 @@ class _RegistPekerjaDataDiriState extends State<RegistPekerjaDataDiri>
         minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () async {
-        formKey.currentState!.validate();
-        formKey.currentState!.save();
-        // validationAlamat();
-        // validationAlamatKtp();
-        if (namalengkap == '' ||
-            selectedProvinsi == null ||
-            selectedKota == null ||
-            selectedKecamatan == null ||
-            selectedAgama == null ||
-            selectedDate == null ||
-            selectedJenisKelamin == null ||
-            alamatKTP == '' ||
-            alamat == '') {
-          _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
-        } else {
-          try {
-            setState(() {
-              isLoading = true;
-            });
-            bool success = await pekerjaRegist.registerSecondPage(
-              namalengkap,
-              alamatKTP,
-              selectedKecamatan!,
-              selectedAgama!,
-              alamat,
-              selectedDate.toString(),
-              selectedJenisKelamin!,
-            );
+        try {
+          setState(() {
+            isLoading = true;
+          });
+          bool success = await pekerjaRegist.registerSecondPage(
+            "Rizky Hidayat",
+            "Jl. Cendrawasih No. 45, RT 03 RW 02",
+            "2239",
+            "Islam",
+            "Jl. Budi Mulya No. 12, Bandung",
+            "1996-04-12",
+            "Laki-laki",
+          );
 
-            if (success) {
-              Navigator.pushNamed(context, '/registpekerjaketerangan');
-              _showTopSnackbar(context, "Data telah tersimpan", true);
-              setState(() {
-                isLoading = false;
-              });
-            }
-          } catch (e) {
-            print('Error: $e');
-            showTopSnackbar(
-                context, e.toString().replaceFirst('Exception: ', ''));
+          if (success) {
+            Navigator.pushNamed(context, '/registpekerjaketerangan');
+            _showTopSnackbar(context, "Data telah tersimpan", true);
             setState(() {
               isLoading = false;
             });
           }
+        } catch (e) {
+          print('Error: $e');
+          showTopSnackbar(
+              context, e.toString().replaceFirst('Exception: ', ''));
+          setState(() {
+            isLoading = false;
+          });
         }
       },
+      // onPressed: () async {
+      //   formKey.currentState!.validate();
+      //   formKey.currentState!.save();
+      //   // validationAlamat();
+      //   // validationAlamatKtp();
+      //   if (namalengkap == '' ||
+      //       selectedProvinsi == null ||
+      //       selectedKota == null ||
+      //       selectedKecamatan == null ||
+      //       selectedAgama == null ||
+      //       selectedDate == null ||
+      //       selectedJenisKelamin == null ||
+      //       alamatKTP == '' ||
+      //       alamat == '') {
+      //     _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
+      //   } else {
+      //     try {
+      //       setState(() {
+      //         isLoading = true;
+      //       });
+      //       bool success = await pekerjaRegist.registerSecondPage(
+      //         namalengkap,
+      //         alamatKTP,
+      //         selectedKecamatan!,
+      //         selectedAgama!,
+      //         alamat,
+      //         selectedDate.toString(),
+      //         selectedJenisKelamin!,
+      //       );
+
+      //       if (success) {
+      //         Navigator.pushNamed(context, '/registpekerjaketerangan');
+      //         _showTopSnackbar(context, "Data telah tersimpan", true);
+      //         setState(() {
+      //           isLoading = false;
+      //         });
+      //       }
+      //     } catch (e) {
+      //       print('Error: $e');
+      //       showTopSnackbar(
+      //           context, e.toString().replaceFirst('Exception: ', ''));
+      //       setState(() {
+      //         isLoading = false;
+      //       });
+      //     }
+      //   }
+      // },
       child: isLoading
           ? SizedBox(
               height: 20,

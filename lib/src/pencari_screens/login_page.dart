@@ -27,6 +27,13 @@ class _LoginPageState extends State<LoginPage> with ValidationMixin {
   bool isLoading = false;
 
   @override
+  void initState() {
+    emailController.text = "2@gmail.com";
+    passwordController.text = "password";
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;

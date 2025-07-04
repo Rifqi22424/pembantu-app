@@ -1127,35 +1127,17 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman>
         minimumSize: WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
       ),
       onPressed: () async {
-        print(deskripsi);
-        formKey.currentState!.validate();
-        isFotoNull();
-        formKey.currentState!.save();
-
-        if (selectedProfesi == null ||
-            selectedSkillList == [] ||
-            deskripsi == '' ||
-            pengalaman == '' ||
-            selectedPendidikan == null ||
-            gaji == '' ||
-            selectedKTPImg == null ||
-            selectedSKBImg == null ||
-            selectedHalfImg == null ||
-            selectedFullImg == null ||
-            selectedSertifImg == null) {
-          _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
-        } else {
           try {
             setState(() {
               isLoading = true;
             });
             bool success = await pekerjaRegist.registerFifthPage(
-              selectedProfesi.toString(),
-              deskripsi,
-              pengalaman,
-              selectedPendidikan.toString(),
-              gaji,
-              changeListToStringSkill(),
+              "art",
+              "Seorang yang jujur dan siap untuk bekerja apa saja",
+              "3",
+              "SMA/ Sederajat",
+              "3000000",
+              "Babysitting, Kebersihan dan sanitasi, Menjaga properti, Merawat anak/lansia, Memasak dan saji, Menyupirkan",
             );
             File compressedKTPImg = await compressImage(selectedKTPImg!);
             File compressedSKBImg = await compressImage(selectedSKBImg!);
@@ -1191,9 +1173,76 @@ class _RegistPekerjaPengalamanState extends State<RegistPekerjaPengalaman>
             setState(() {
               isLoading = false;
             });
-          }
         }
       },
+      // onPressed: () async {
+      //   print(deskripsi);
+      //   formKey.currentState!.validate();
+      //   isFotoNull();
+      //   formKey.currentState!.save();
+
+      //   if (selectedProfesi == null ||
+      //       selectedSkillList == [] ||
+      //       deskripsi == '' ||
+      //       pengalaman == '' ||
+      //       selectedPendidikan == null ||
+      //       gaji == '' ||
+      //       selectedKTPImg == null ||
+      //       selectedSKBImg == null ||
+      //       selectedHalfImg == null ||
+      //       selectedFullImg == null ||
+      //       selectedSertifImg == null) {
+      //     _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
+      //   } else {
+      //     try {
+      //       setState(() {
+      //         isLoading = true;
+      //       });
+      //       bool success = await pekerjaRegist.registerFifthPage(
+      //         selectedProfesi.toString(),
+      //         deskripsi,
+      //         pengalaman,
+      //         selectedPendidikan.toString(),
+      //         gaji,
+      //         changeListToStringSkill(),
+      //       );
+      //       File compressedKTPImg = await compressImage(selectedKTPImg!);
+      //       File compressedSKBImg = await compressImage(selectedSKBImg!);
+      //       File compressedHalfImg = await compressImage(selectedHalfImg!);
+      //       File compressedFullImg = await compressImage(selectedFullImg!);
+      //       File compressedSertifImg = await compressImage(selectedSertifImg!);
+
+      //       bool successToo = await pekerjaRegist.registersSixthPage(
+      //         compressedKTPImg,
+      //         compressedSKBImg,
+      //         compressedHalfImg,
+      //         compressedFullImg,
+      //         compressedSertifImg,
+      //       );
+      //       if (success && successToo) {
+      //         // Navigator.pushNamed(context, '/login');
+      //         Navigator.pushAndRemoveUntil(
+      //           context,
+      //           MaterialPageRoute(builder: (context) => LoginPage()),
+      //           (Route<dynamic> route) => false,
+      //         );
+      //         _showTopSnackbar(context, "Data berhasil tersimpan", true);
+
+      //         setState(() {
+      //           isLoading = false;
+      //         });
+      //       }
+      //     } catch (e) {
+      //       print('Error: $e');
+      //       _showTopSnackbar(
+      //           context, e.toString().replaceFirst('Exception: ', ''), false);
+
+      //       setState(() {
+      //         isLoading = false;
+      //       });
+      //     }
+      //   }
+      // },
       child: isLoading
           ? SizedBox(
               height: 20,

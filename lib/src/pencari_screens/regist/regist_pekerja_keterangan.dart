@@ -615,48 +615,77 @@ class _RegistPekerjaKeteranganState extends State<RegistPekerjaKeterangan>
               WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
         onPressed: () async {
-          formKey.currentState!.validate();
-          formKey.currentState!.save();
-          validationKtp();
-          validationNoTelp();
-          if (noktp == '' ||
-              tinggibadan == '' ||
-              beratbadan == '' ||
-              selectedUsia == null ||
-              selectedStatus == null) {
-            _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
-            print(
-                "$noktp, $tinggibadan, $beratbadan, $selectedUsia, $selectedStatus");
-          } else {
-            try {
-              setState(() {
-                isLoading = true;
-              });
-              bool success = await pekerjaRegist.registerThirdPage(
-                noktp,
-                notelp,
-                tinggibadan,
-                beratbadan,
-                selectedUsia!,
-                selectedStatus!,
-              );
-              if (success) {
-                Navigator.pushNamed(context, '/registpekerjakontaklain');
-                _showTopSnackbar(context, "Data telah tersimpan", true);
-                setState(() {
-                  isLoading = false;
-                });
-              }
-            } catch (e) {
-              print('Error $e');
-              _showTopSnackbar(
-                  context, e.toString().replaceFirst('Exception: ', ''), false);
+          try {
+            setState(() {
+              isLoading = true;
+            });
+            bool success = await pekerjaRegist.registerThirdPage(
+              "3272070408040001",
+              "0857213122398",
+              "180",
+              "60",
+              "21",
+              "1",
+            );
+            if (success) {
+              Navigator.pushNamed(context, '/registpekerjakontaklain');
+              _showTopSnackbar(context, "Data telah tersimpan", true);
               setState(() {
                 isLoading = false;
               });
             }
+          } catch (e) {
+            print('Error $e');
+            _showTopSnackbar(
+                context, e.toString().replaceFirst('Exception: ', ''), false);
+            setState(() {
+              isLoading = false;
+            });
           }
         },
+        // onPressed: () async {
+        //   formKey.currentState!.validate();
+        //   formKey.currentState!.save();
+        //   validationKtp();
+        //   validationNoTelp();
+        //   if (noktp == '' ||
+        //       tinggibadan == '' ||
+        //       beratbadan == '' ||
+        //       selectedUsia == null ||
+        //       selectedStatus == null) {
+        //     _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
+        //     print(
+        //         "$noktp, $tinggibadan, $beratbadan, $selectedUsia, $selectedStatus");
+        //   } else {
+        //     try {
+        //       setState(() {
+        //         isLoading = true;
+        //       });
+        //       bool success = await pekerjaRegist.registerThirdPage(
+        //         noktp,
+        //         notelp,
+        //         tinggibadan,
+        //         beratbadan,
+        //         selectedUsia!,
+        //         selectedStatus!,
+        //       );
+        //       if (success) {
+        //         Navigator.pushNamed(context, '/registpekerjakontaklain');
+        //         _showTopSnackbar(context, "Data telah tersimpan", true);
+        //         setState(() {
+        //           isLoading = false;
+        //         });
+        //       }
+        //     } catch (e) {
+        //       print('Error $e');
+        //       _showTopSnackbar(
+        //           context, e.toString().replaceFirst('Exception: ', ''), false);
+        //       setState(() {
+        //         isLoading = false;
+        //       });
+        //     }
+        //   }
+        // },
         child: isLoading
             ? SizedBox(
                 height: 20,

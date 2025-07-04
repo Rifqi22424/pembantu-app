@@ -401,23 +401,15 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain>
               WidgetStateProperty.all<Size>(Size(double.maxFinite, 54)),
         ),
         onPressed: () async {
-          formKey.currentState!.validate();
-          formKey.currentState!.save();
-          if (namalengkap == '' ||
-              alamatktp == '' ||
-              notelp == '' ||
-              alamat == '') {
-            _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
-          } else {
             try {
               setState(() {
                 isLoading = true;
               });
               bool success = await pekerjaRegist.registerFourthPage(
-                namalengkap,
-                alamatktp,
-                notelp,
-                alamat,
+                "Annisa Rahmawati",
+                "Perumahan Griya Asri Blok D2",
+                "083472392839",
+                "Perumahan Griya Asri",
               );
               if (success) {
                 Navigator.pushNamed(context, '/registpekerjapengalaman');
@@ -434,9 +426,45 @@ class _RegistPekerjaKontakLainState extends State<RegistPekerjaKontakLain>
               setState(() {
                 isLoading = false;
               });
-            }
           }
         },
+        // onPressed: () async {
+        //   formKey.currentState!.validate();
+        //   formKey.currentState!.save();
+        //   if (namalengkap == '' ||
+        //       alamatktp == '' ||
+        //       notelp == '' ||
+        //       alamat == '') {
+        //     _showTopSnackbar(context, "Lengkapi data terlebih dahulu", false);
+        //   } else {
+        //     try {
+        //       setState(() {
+        //         isLoading = true;
+        //       });
+        //       bool success = await pekerjaRegist.registerFourthPage(
+        //         namalengkap,
+        //         alamatktp,
+        //         notelp,
+        //         alamat,
+        //       );
+        //       if (success) {
+        //         Navigator.pushNamed(context, '/registpekerjapengalaman');
+        //         _showTopSnackbar(context, "Data telah tersimpan", true);
+
+        //         setState(() {
+        //           isLoading = false;
+        //         });
+        //       }
+        //     } catch (e) {
+        //       print('Error $e');
+        //       _showTopSnackbar(
+        //           context, e.toString().replaceFirst('Exception: ', ''), false);
+        //       setState(() {
+        //         isLoading = false;
+        //       });
+        //     }
+        //   }
+        // },
         child: isLoading
             ? SizedBox(
                 height: 20,

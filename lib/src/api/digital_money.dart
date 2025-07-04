@@ -94,11 +94,14 @@ class DigitalMoney {
     );
 
     if (response.statusCode == 200) {
+      print("test");
       final List<dynamic> jsonData = json.decode(response.body)['data'];
+      print(jsonData);
 
       List<Transaction> transactions = jsonData.map((data) {
         return Transaction.fromJson(Map<String, dynamic>.from(data));
       }).toList();
+      print(transactions.toString());
 
       return transactions.reversed.toList();
     } else {

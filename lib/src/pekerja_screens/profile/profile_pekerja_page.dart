@@ -278,16 +278,17 @@ class _ProfilePageState extends State<ProfilePekerjaPage> {
                           buildListTile(
                             iconPath: 'images/logoutSign.png',
                             title: 'Log Out',
-                            onTap: () async {
-                              await saveTokenToSharedPreferences('deleted');
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => LoginPage()),
-                                (Route<dynamic> route) => false,
-                              );
-                            },
+                            // onTap: () async {
+                            //   await saveTokenToSharedPreferences('deleted');
+                            //   Navigator.pushAndRemoveUntil(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //         builder: (context) => LoginPage()),
+                            //     (Route<dynamic> route) => false,
+                            //   );
+                            // },
                           ),
+                          
                         ],
                       ),
                       SizedBox(height: 80),

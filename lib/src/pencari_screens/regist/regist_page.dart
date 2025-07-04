@@ -79,16 +79,6 @@ class _RegistPageState extends State<RegistPage> with ValidationMixin {
                       SizedBox(height: 12),
                       // (passwordErr) ? passwordError() : SizedBox(height: 12),
                       confirmPassField(),
-                      // SizedBox(height: 12),
-                      // (confirmPasswordErr)
-                      // ? confirmPasswordError()
-                      // : SizedBox(height: 20),
-                      // ButtonBuilder(
-                      //     onPressed: () async {
-                      //       validation();
-                      //       await pushToApi();
-                      //     },
-                      //     label: "Sign Up"),
                                         SizedBox(height: screenHeight * 0.02),
                       submitButton(),
                       Spacer(),

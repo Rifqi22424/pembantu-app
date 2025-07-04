@@ -51,6 +51,7 @@ class MainPekerjaPageState extends State<MainPekerjaPage>
 
   BottomNavigationBar buildBottomNavigationBar() {
     return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
       currentIndex: _currentIndex,
       onTap: (index) {
         if (index == 3) {

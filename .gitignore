@@ -42,3 +42,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+firebase_options.dart
+google-services.json
+my_keystore.jks

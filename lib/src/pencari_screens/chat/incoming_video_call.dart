@@ -7,7 +7,10 @@ import 'package:vibration/vibration.dart';
 import 'package:prt/src/database/shared_preferences.dart';
 
 class IncomingVideoCall extends StatefulWidget {
-  const IncomingVideoCall({Key? key}) : super(key: key);
+  final String channelName;
+  final String channelToken;
+  const IncomingVideoCall(
+      {super.key, required this.channelName, required this.channelToken});
 
   @override
   State<IncomingVideoCall> createState() => _InconmingVideoCallState();
@@ -47,6 +50,12 @@ class _InconmingVideoCallState extends State<IncomingVideoCall>
     );
 
     startAnimation();
+
+    Future.delayed(Duration(seconds: 10), () {
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    });
   }
 
   @override
@@ -97,7 +106,7 @@ class _InconmingVideoCallState extends State<IncomingVideoCall>
                     nameCalling(),
                     const SizedBox(height: 12),
                     callStatue(),
-                    SizedBox(height: 150),
+                    SizedBox(height: 300),
                     Stack(
                       children: [
                         Center(
@@ -151,20 +160,19 @@ class _InconmingVideoCallState extends State<IncomingVideoCall>
                               _isDragged = true;
                             },
                             onVerticalDragUpdate: (details) async {
-                              final String? token =
-                                  await getVcallTokenFromSharedPreferences();
-                              final String? channel =
-                                  await getVcallNameFromSharedPreferences();
+                              // final String? token =
+                              //     await getVcallTokenFromSharedPreferences();
+                              // final String? channel =
+                              //     await getVcallNameFromSharedPreferences();
                               setState(() {
-                                _top += details.primaryDelta! *
-                                    1.5; 
+                                _top += details.primaryDelta! * 1.5;
                                 if (_top < _minTop) {
                                   _top = _minTop;
                                   Navigator.pushReplacementNamed(
                                       context, '/videocall',
                                       arguments: {
-                                        'channel': channel,
-                                        'token': token,
+                                        'channel': widget.channelName,
+                                        'token': widget.channelToken,
                                       });
                                   print('Batas atas');
                                   FlutterRingtonePlayer.stop();

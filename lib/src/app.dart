@@ -2,12 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:overlay_support/overlay_support.dart';
-import 'package:prt/main.dart';
 import 'package:prt/src/route_generator.dart';
 import 'package:prt/src/widgets/scroll_behavior.dart';
 
 class App extends StatelessWidget {
-  const App({super.key});
+  final GlobalKey<NavigatorState>? navigatorKey;
+
+  const App({Key? key, this.navigatorKey}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

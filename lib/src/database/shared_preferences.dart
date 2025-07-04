@@ -60,3 +60,13 @@ Future<String?> getRoleFromSharedPreferences() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString('role');
 }
+
+Future<void> saveMsgToSharedPreferences(String msg) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('msg', msg);
+}
+
+Future<String?> getMsgFromSharedPreferences() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('msg');
+}

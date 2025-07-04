@@ -89,23 +89,21 @@ class _MyAppState extends State<VideoCall> {
     );
   }
 
-  void toggleMuteCamera() {
-    setState(() async {
-      _isCameraMuted = !_isCameraMuted;
-      await _engine.muteLocalVideoStream(_isCameraMuted);
-    });
+  void toggleMuteCamera() async {
+    _isCameraMuted = !_isCameraMuted;
+    await _engine.muteLocalVideoStream(_isCameraMuted);
+    setState(() {});
   }
 
-  void toggleMic() {
-    setState(() async {
-      _isMicMuted = !_isMicMuted;
-      await _engine.muteLocalAudioStream(_isMicMuted);
-    });
+  void toggleMic() async {
+    _isMicMuted = !_isMicMuted;
+    await _engine.muteLocalAudioStream(_isMicMuted);
+    setState(() {});
   }
 
-  void toggleReverseCamera() {
+  void toggleReverseCamera() async {
     _isFrontCamera = !_isFrontCamera;
-    _engine.switchCamera();
+    await _engine.switchCamera();
     setState(() {});
   }
 
@@ -211,7 +209,7 @@ class _MyAppState extends State<VideoCall> {
   }
 
   onOffMic() {
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         toggleMic();
       },

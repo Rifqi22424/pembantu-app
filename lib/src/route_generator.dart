@@ -23,6 +23,7 @@ import 'package:prt/src/pencari_screens/liked_users_page.dart';
 import 'package:prt/src/pencari_screens/login_page.dart';
 import 'package:prt/src/pencari_screens/login_regist_page.dart';
 import 'package:prt/src/pencari_screens/announcement_page.dart';
+import 'package:prt/src/pencari_screens/message_page.dart';
 import 'package:prt/src/pencari_screens/profile/edit_profile.dart';
 import 'package:prt/src/pencari_screens/profile/profile_page.dart';
 import 'package:prt/src/pencari_screens/regist/choose_page.dart';
@@ -94,8 +95,8 @@ class RouteGenerator {
         final int id = args['id'];
         return MaterialPageRoute(
             builder: (context) => DetailAnnouncementPage(
-              id: id,
-            ));
+                  id: id,
+                ));
       case '/likedusers':
         final List<UserProfile> userList =
             settings.arguments as List<UserProfile>;
@@ -204,6 +205,10 @@ class RouteGenerator {
         );
       case '/profile':
         return MaterialPageRoute(builder: (context) => ProfilePage());
+      case '/message':
+        // final NotificationResponse message =
+        //     settings.arguments as NotificationResponse;
+        return MaterialPageRoute(builder: (context) => MessagePage());
       case '/editprofile':
         return MaterialPageRoute(builder: (context) => EditProfilePage());
       case '/profilepekerja':
@@ -222,7 +227,15 @@ class RouteGenerator {
       case '/upcoming':
         return MaterialPageRoute(builder: (context) => UpComingPage());
       case '/incomingcall':
-        return MaterialPageRoute(builder: (context) => IncomingVideoCall());
+        final args = settings.arguments as Map<String, dynamic>;
+        final String channel = args['channel'];
+        final String token = args['token'];
+
+        return MaterialPageRoute(
+            builder: (context) => IncomingVideoCall(
+                  channelName: channel,
+                  channelToken: token,
+                ));
       case '/homepekerja':
         return MaterialPageRoute(
             builder: (context) => MainPekerjaPage(index: 0));

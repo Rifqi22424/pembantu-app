@@ -25,16 +25,32 @@ class Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      id: json['id'] as int,
-      nominal: json['nominal'] as String,
-      transactionType: json['transaction_type'] as String,
-      bankId: json['bank_id'] as int,
-      walletId: json['wallet_id'] as int,
-      receiverId: json['receiver_id'] as int,
-      senderId: json['sender_id'] as int,
-      orderId: json['order_id'] as String,
-      statusPembayaran: json['status_pembayaran'] as int,
-      namaLengkap: json['nama_lengkap'] as String,
+      id: json['id'] ?? 0,
+      nominal: json['nominal']?.toString() ?? '',
+      transactionType: json['transaction_type']?.toString() ?? '',
+      bankId: json['bank_id'] ?? 0,
+      walletId: json['wallet_id'] ?? 0,
+      receiverId: json['receiver_id'] ?? 0,
+      senderId: json['sender_id'] ?? 0,
+      orderId: json['order_id']?.toString() ?? '',
+      statusPembayaran: json['status_pembayaran'] ?? 0,
+      namaLengkap: json['nama_lengkap']?.toString() ?? '',
     );
+  }
+
+  @override
+  String toString() {
+    return 'Transaction('
+        'id: $id, '
+        'nominal: $nominal, '
+        'transactionType: $transactionType, '
+        'bankId: $bankId, '
+        'walletId: $walletId, '
+        'receiverId: $receiverId, '
+        'senderId: $senderId, '
+        'orderId: $orderId, '
+        'statusPembayaran: $statusPembayaran, '
+        'namaLengkap: $namaLengkap'
+        ')';
   }
 }
