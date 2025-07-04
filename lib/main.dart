@@ -19,9 +19,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'src/database/shared_preferences.dart';
 
-const serverPath = "http://192.168.207.13:3000";
-// const serverPath = "https://p3gm9glm-8000.asse.devtunnels.ms";
-// const serverPath = "https://angle-app.mangcoding.com";
+const serverPath = "https://angle-app.mangcoding.com";
 
 String? sharedToken;
 final navigatorKey = GlobalKey<NavigatorState>();
