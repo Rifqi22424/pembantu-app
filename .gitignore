@@ -46,3 +46,6 @@ app.*.map.json
 firebase_options.dart
 google-services.json
 my_keystore.jks
+
+lib\firebase_options.dart
+android\app\google-services.json
